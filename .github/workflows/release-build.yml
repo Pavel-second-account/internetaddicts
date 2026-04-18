@@ -10,7 +10,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
 
     steps:
       - name: Checkout
@@ -34,7 +34,23 @@ jobs:
           KEYSTATIC_SECRET: ${{ secrets.KEYSTATIC_SECRET }}
           PUBLIC_KEYSTATIC_GITHUB_APP_SLUG: ${{ secrets.PUBLIC_KEYSTATIC_GITHUB_APP_SLUG }}
 
-      - name: Upload dist
+      - name: Verify dist is non-empty
+        run: |
+          find dist -type f | wc -l
+          du -sh dist
+          test "$(find dist -type f | wc -l)" -gt 0
+
+      - name: Zip dist (for Release assets)
+        run: (cd dist && zip -r "../astro-dist-${{ github.event.release.tag_name }}.zip" .)
+
+      - name: Attach zip to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: astro-dist-${{ github.event.release.tag_name }}.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload dist (Actions artifact)
         uses: actions/upload-artifact@v4
         with:
           name: dist-${{ github.event.release.tag_name }}
