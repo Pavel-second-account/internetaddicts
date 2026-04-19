@@ -1,6 +1,6 @@
-# Сборка при публикации GitHub Release: артефакт dist + zip во вложениях релиза.
-# Зависимости ставятся в CI по package.json (bun install без frozen-lockfile — локальный bun не нужен).
-# Скачать: Releases → astro-dist-<tag>.zip, либо Actions → Artifacts.
+# Сборка при публикации GitHub Release: dist → astro-dist-<tag>.zip + package.json (и lock при наличии)
+# в те же Release assets. VPS качает манифесты с github.com/.../releases/download/<tag>/ — без raw.githubusercontent.com
+# (с некоторых хостингов raw даёт 404). Скачать: Releases, либо Actions → Artifacts (только dist).
 name: Release build
 
 on:
@@ -41,13 +41,25 @@ jobs:
           echo "files in dist: $n"
           test "$n" -gt 0
 
-      - name: Zip dist (Release asset)
+      - name: Zip dist only (Release asset)
         run: (cd dist && zip -r "../astro-dist-${{ github.event.release.tag_name }}.zip" .)
 
-      - name: Attach zip to GitHub Release
+      - name: Stage npm manifests for Release assets
+        run: |
+          mkdir -p release-assets
+          cp package.json release-assets/package.json
+          if [ -f package-lock.json ]; then
+            cp package-lock.json release-assets/package-lock.json
+          fi
+
+      - name: Attach zip and manifests to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: astro-dist-${{ github.event.release.tag_name }}.zip
+          files: |
+            astro-dist-${{ github.event.release.tag_name }}.zip
+            release-assets/package.json
+            release-assets/package-lock.json
+          fail_on_unmatched_files: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
