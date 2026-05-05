@@ -28,9 +28,9 @@ export const navigation = [
 	},
 	{
 		href: "/posts",
-		label: "Статьи",
+		label: "Литература",
 		target: "",
-		icon: "mdi:archive-search",
+		icon: "mdi:book-open-outline",
 		style: "",
 	},
 	{

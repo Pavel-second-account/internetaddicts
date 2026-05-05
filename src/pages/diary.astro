@@ -26,39 +26,46 @@ const diary = await getCollection("diary")
 const currentDate = new Date()
 const currentDay = currentDate.getDate()
 const currentMonth = currentDate.getMonth()
+const refYear = currentDate.getFullYear()
 
-const sortedDiary = diary
-	.sort((a, b) => {
-		const dateA = new Date(
-			currentDate.getFullYear(),
-			currentDate.getMonth(),
-			Number(a.data.when),
-		)
-		const dateB = new Date(
-			currentDate.getFullYear(),
-			currentDate.getMonth(),
-			Number(b.data.when),
-		)
-		return dateB.getTime() - dateA.getTime()
-	})
-	.reverse()
-
-const todayIndex = sortedDiary.findIndex(a => {
-	const diaryDay = Number(a.data.when)
-	return diaryDay === currentDay && currentMonth === currentDate.getMonth()
-})
-
-let currentDiary
-
-const realIndex = todayIndex + currentParam
-if (realIndex < 0 || realIndex >= sortedDiary.length) {
-	currentDiary = sortedDiary.at(0)
-} else {
-	currentDiary = sortedDiary.at(realIndex)
+function diarySlugCalendarParts(slug: string): [month: number, day: number] | null {
+	const m = /^diary_(\d{2})_(\d{2})$/.exec(slug)
+	if (!m) return null
+	return [Number(m[1]) - 1, Number(m[2])]
 }
 
-const diaryDay = Number(currentDiary.data.when)
-const diaryDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), diaryDay)
+function diaryCalendarDate(entry: (typeof diary)[number]): Date {
+	const parsed = diarySlugCalendarParts(entry.slug)
+	if (parsed) {
+		const [monthIndex, day] = parsed
+		return new Date(refYear, monthIndex, day)
+	}
+	return new Date(refYear, currentMonth, Number(entry.data.when))
+}
+
+const sortedDiary = [...diary].sort(
+	(a, b) => diaryCalendarDate(a).getTime() - diaryCalendarDate(b).getTime(),
+)
+
+if (sortedDiary.length === 0) {
+	return Astro.redirect("/404")
+}
+
+const todayIndex = sortedDiary.findIndex(a => {
+	const cal = diaryCalendarDate(a)
+	return (
+		cal.getDate() === currentDay &&
+		cal.getMonth() === currentMonth &&
+		cal.getFullYear() === refYear
+	)
+})
+
+const anchorIndex = todayIndex >= 0 ? todayIndex : 0
+const n = sortedDiary.length
+const wrappedIndex = (((anchorIndex + currentParam) % n) + n) % n
+const currentDiary = sortedDiary[wrappedIndex]!
+
+const diaryDate = diaryCalendarDate(currentDiary)
 
 const dateOptions: object = {
 	day: "numeric",

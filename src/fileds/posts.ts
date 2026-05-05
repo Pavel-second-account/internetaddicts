@@ -1,7 +1,7 @@
 import { collection, fields } from "@keystatic/core"
 
 export const posts = collection({
-	label: "Посты",
+	label: "Литература",
 	slugField: "title",
 	path: "src/content/posts/*",
 	entryLayout: "content",

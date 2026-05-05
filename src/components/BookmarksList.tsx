@@ -33,12 +33,12 @@ export default function BookmarksList() {
 			fallback={
 				<div class="rounded-2xl border border-zinc-200 bg-zinc-50 p-8 text-center">
 					<h2 class="text-2xl font-bold text-zinc-800">Закладок пока нет</h2>
-					<p class="mt-2 text-zinc-600">Откройте статьи и добавьте нужные в закладки.</p>
+					<p class="mt-2 text-zinc-600">Откройте раздел литературы и добавьте нужные материалы в закладки.</p>
 					<a
 						href="/posts"
 						class="mt-5 inline-flex rounded-lg bg-zinc-900 px-4 py-2 text-sm font-semibold text-white"
 					>
-						Перейти к статьям
+						К литературе
 					</a>
 				</div>
 			}
