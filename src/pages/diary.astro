@@ -60,12 +60,14 @@ const todayIndex = sortedDiary.findIndex(a => {
 	)
 })
 
-const anchorIndex = todayIndex >= 0 ? todayIndex : 0
-const n = sortedDiary.length
-const wrappedIndex = (((anchorIndex + currentParam) % n) + n) % n
-const currentDiary = sortedDiary[wrappedIndex]!
+/** Просматриваемая календарная дата: каждый клик ±1 день от «сегодня». */
+const diaryDate = new Date(refYear, currentMonth, currentDay + currentParam)
 
-const diaryDate = diaryCalendarDate(currentDiary)
+const n = sortedDiary.length
+/** Контент ленты — записи по кругу; шаг по дням сдвигает и дату, и запись. */
+const anchorEntryIndex = todayIndex >= 0 ? todayIndex : 0
+const contentIndex = (((anchorEntryIndex + currentParam) % n) + n) % n
+const currentDiary = sortedDiary[contentIndex]!
 
 const dateOptions: object = {
 	day: "numeric",
