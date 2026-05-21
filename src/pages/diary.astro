@@ -43,6 +43,13 @@ function diaryCalendarDate(entry: (typeof diary)[number]): Date {
 	return new Date(refYear, currentMonth, Number(entry.data.when))
 }
 
+const MS_PER_DAY = 86_400_000
+
+function daysSinceEpoch(date: Date): number {
+	const utc = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate())
+	return Math.floor((utc - Date.UTC(1970, 0, 1)) / MS_PER_DAY)
+}
+
 const sortedDiary = [...diary].sort(
 	(a, b) => diaryCalendarDate(a).getTime() - diaryCalendarDate(b).getTime(),
 )
@@ -51,22 +58,12 @@ if (sortedDiary.length === 0) {
 	return Astro.redirect("/404")
 }
 
-const todayIndex = sortedDiary.findIndex(a => {
-	const cal = diaryCalendarDate(a)
-	return (
-		cal.getDate() === currentDay &&
-		cal.getMonth() === currentMonth &&
-		cal.getFullYear() === refYear
-	)
-})
-
 /** Просматриваемая календарная дата: каждый клик ±1 день от «сегодня». */
 const diaryDate = new Date(refYear, currentMonth, currentDay + currentParam)
 
 const n = sortedDiary.length
-/** Контент ленты — записи по кругу; шаг по дням сдвигает и дату, и запись. */
-const anchorEntryIndex = todayIndex >= 0 ? todayIndex : 0
-const contentIndex = (((anchorEntryIndex + currentParam) % n) + n) % n
+/** Запись в кольце — по числу дней от 01.01.1970 для этой даты. */
+const contentIndex = ((daysSinceEpoch(diaryDate) % n) + n) % n
 const currentDiary = sortedDiary[contentIndex]!
 
 const dateOptions: object = {
