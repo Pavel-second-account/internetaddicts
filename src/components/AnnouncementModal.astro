@@ -1,0 +1,124 @@
+---
+import { Image } from "astro:assets"
+import { getActiveAnnouncements } from "@/data/announcements"
+import { ANNOUNCEMENT_DISMISS_PREFIX } from "@/lib/announcements"
+
+const active = getActiveAnnouncements()
+if (active.length === 0) return
+---
+
+{
+	active.map(announcement => (
+		<div
+			class="announcement-modal fixed inset-0 z-[80] hidden items-center justify-center p-4"
+			role="dialog"
+			aria-modal="true"
+			aria-labelledby={`announcement-title-${announcement.id}`}
+			data-announcement-modal
+			data-announcement-id={announcement.id}
+		>
+			<button
+				type="button"
+				class="announcement-backdrop absolute inset-0 bg-black/45"
+				aria-label="Закрыть объявление"
+				data-announcement-close
+			/>
+			<div class="relative z-10 max-h-[min(90vh,640px)] w-full max-w-md overflow-y-auto rounded-2xl bg-white p-5 shadow-2xl ring-1 ring-black/10">
+				<button
+					type="button"
+					class="absolute right-3 top-3 rounded-lg px-2 py-1 text-2xl leading-none text-zinc-500 hover:bg-zinc-100 hover:text-zinc-800"
+					aria-label="Закрыть"
+					data-announcement-close
+				>
+					×
+				</button>
+				<div class="flex flex-col gap-4">
+					<div class="flex items-start gap-4">
+						<Image
+							src={announcement.image}
+							alt={announcement.imageAlt ?? announcement.title}
+							width={112}
+							height={112}
+							class="h-24 w-24 shrink-0 rounded-xl object-cover ring-1 ring-black/5"
+							formats={["webp", "png"]}
+						/>
+						<div class="min-w-0 flex-1 pr-6">
+							<h2
+								id={`announcement-title-${announcement.id}`}
+								class="text-lg font-bold leading-snug text-zinc-900"
+							>
+								{announcement.title}
+							</h2>
+							{announcement.lead && (
+								<p class="mt-2 text-[15px] leading-relaxed text-zinc-700">{announcement.lead}</p>
+							)}
+						</div>
+					</div>
+					{announcement.bullets.length > 0 && (
+						<ul class="w-full space-y-1.5 text-[15px] text-zinc-700">
+							{announcement.bullets.map(item => (
+								<li class="flex gap-2">
+									<span class="shrink-0 text-[#0071e3]" aria-hidden="true">
+										🔹
+									</span>
+									<span class="min-w-0 flex-1">{item}</span>
+								</li>
+							))}
+						</ul>
+					)}
+					<p class="w-full text-sm text-zinc-600">
+						Проголосовать за день и место можно в чате мероприятия
+					</p>
+				</div>
+				<div class="mt-5 flex items-center justify-between gap-3">
+					<button
+						type="button"
+						class="rounded-full border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
+						data-announcement-close
+					>
+						Закрыть
+					</button>
+					<a
+						href={announcement.ctaHref}
+						target="_blank"
+						rel="noopener noreferrer"
+						class="rounded-full bg-[#0071e3] px-4 py-2 text-sm font-semibold text-white hover:bg-[#0066cc]"
+					>
+						{announcement.ctaLabel}
+					</a>
+				</div>
+			</div>
+		</div>
+	))
+}
+
+<script define:vars={{ dismissPrefix: ANNOUNCEMENT_DISMISS_PREFIX }}>
+	const modals = document.querySelectorAll("[data-announcement-modal]")
+
+	const dismissKey = id => `${dismissPrefix}${id}`
+
+	const openModal = modal => {
+		modal.classList.remove("hidden")
+		modal.classList.add("flex")
+		document.body.classList.add("overflow-hidden")
+	}
+
+	const closeModal = modal => {
+		const id = modal.dataset.announcementId
+		if (id) localStorage.setItem(dismissKey(id), "1")
+		modal.classList.add("hidden")
+		modal.classList.remove("flex")
+		const anyOpen = [...modals].some(m => m.classList.contains("flex") && !m.classList.contains("hidden"))
+		if (!anyOpen) document.body.classList.remove("overflow-hidden")
+	}
+
+	for (const modal of modals) {
+		const id = modal.dataset.announcementId
+		if (!id || localStorage.getItem(dismissKey(id)) === "1") continue
+		openModal(modal)
+		modal.querySelectorAll("[data-announcement-close]").forEach(btn => {
+			btn.addEventListener("click", () => closeModal(modal))
+		})
+		break
+	}
+</script>
