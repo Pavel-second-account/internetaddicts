@@ -8,6 +8,8 @@ export type SiteAnnouncement = {
 	activeUntil: string
 	title: string
 	lead?: string
+	where?: string
+	when?: string
 	bullets: string[]
 	ctaLabel: string
 	ctaHref: string
@@ -21,15 +23,18 @@ export const siteAnnouncements: SiteAnnouncement[] = [
 		id: "picnic-june-2026",
 		enabled: true,
 		activeUntil: "2026-07-05",
-		title: "Околопрограммное мероприятие АИЗ в июне",
-		lead: "Устраиваем в Москве очередной пикник-развиртуализацию",
+		title: "Традиционный летний Пикник АИЗ пройдет в Москве уже 7 июня",
+		where:
+			"Парк Фили на набережной Москвы-реки, 10 минут пешком от м.Филевский Парк",
+		when: "Воскресенье 7 июня с 14.00 и до упора",
 		bullets: [
 			"Природа",
 			"Вкусняшки",
 			"Живое человеческое общение",
-			"Настолки, спикерские, двусторонняя молитва + предлагайте своё",
+			"Настолки, спикерские, двусторонняя молитва",
+			"По желанию можно провести спикерские, мастер-классы, игры"
 		],
-		ctaLabel: "В чат мероприятия",
+		ctaLabel: "Инструкции как пройти и другая оргинформация в чате",
 		ctaHref: "https://t.me/+ombh8xnB9csyMmQy",
 		image: picnicImage,
 		imageAlt: "Пикник АИЗ",

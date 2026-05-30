@@ -52,6 +52,16 @@ if (active.length === 0) return
 							{announcement.lead && (
 								<p class="mt-2 text-[15px] leading-relaxed text-zinc-700">{announcement.lead}</p>
 							)}
+							{announcement.where && (
+								<p class="mt-2 text-[15px] leading-relaxed text-zinc-700">
+									<span class="font-semibold text-zinc-900">Где:</span> {announcement.where}
+								</p>
+							)}
+							{announcement.when && (
+								<p class="mt-1.5 text-[15px] leading-relaxed text-zinc-700">
+									<span class="font-semibold text-zinc-900">Когда:</span> {announcement.when}
+								</p>
+							)}
 						</div>
 					</div>
 					{announcement.bullets.length > 0 && (
@@ -66,9 +76,6 @@ if (active.length === 0) return
 							))}
 						</ul>
 					)}
-					<p class="w-full text-sm text-zinc-600">
-						Проголосовать за день и место можно в чате мероприятия
-					</p>
 				</div>
 				<div class="mt-5 flex items-center justify-between gap-3">
 					<button
