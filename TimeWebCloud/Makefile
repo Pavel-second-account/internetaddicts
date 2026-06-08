@@ -1,15 +1,18 @@
 # Деплой на Timeweb Cloud: ssh root@хост. Пароль из TimeWebCloud/.env (PASSWORD=…) — через ssh-wrap.sh + sshpass.
 # Без PASSWORD в .env — обычный ssh (ключ или ручной ввод). IPv6: make SSH_OPTS=-6 SSH_HOST='$(IPv6)' bootstrap-site
 # Переменные из TimeWebCloud/.env подключаются как в Makefile (KEY=value, без пробелов вокруг =). Переопределяют значения по умолчанию ниже.
-.PHONY: help connect bootstrap-site update-ui clean start stop nginx-proxy https diagnose reset-nginx-ssl
+.PHONY: help connect bootstrap-site update-ui update-ui-upload clean start stop nginx-proxy https diagnose reset-nginx-ssl
 
 TIMEWEB_DIR := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 -include $(TIMEWEB_DIR).env
 export
 
 SSH_WRAP := $(TIMEWEB_DIR)ssh-wrap.sh
+LOCAL_DIR := $(TIMEWEB_DIR)local
+SCP_WRAP := $(LOCAL_DIR)/scp-wrap.sh
 BOOTSTRAP_SH := $(TIMEWEB_DIR)bootstrap-site.sh
 UPDATE_UI_SH := $(TIMEWEB_DIR)update-ui.sh
+UPDATE_UI_FROM_ZIP_SH := $(LOCAL_DIR)/update-ui-from-zip.sh
 NGINX_PROXY_SH := $(TIMEWEB_DIR)nginx-proxy.sh
 DIAGNOSE_SH := $(TIMEWEB_DIR)diagnose.sh
 CERTBOT_SH := $(TIMEWEB_DIR)certbot-nginx.sh
@@ -25,10 +28,12 @@ SITE_ROOT = $(REMOTE_DIR)/current
 # Распакованный dist из CI: server/entry.mjs + client/ (Astro static + @astrojs/node, SSR где prerender=false)
 
 # GitHub Release v1.0.1 (Node standalone) → astro-dist-v1.0.1.zip. SHA от файла на Releases, не от Artifacts в Actions.
-RELEASE_TAG  ?= v1.1.6
+RELEASE_TAG  ?= v1.1.7
 RELEASE_ZIP  := astro-dist-$(RELEASE_TAG).zip
 DOWNLOAD_URL := https://github.com/Pavel-second-account/internetaddicts/releases/download/$(RELEASE_TAG)/$(RELEASE_ZIP)
 # package.json (и lock при наличии) внутри astro-dist-*.zip — отдельных ассетов на релизе нет
+LOCAL_ZIP := $(LOCAL_DIR)/$(RELEASE_ZIP)
+REMOTE_ZIP := /tmp/$(RELEASE_ZIP)
 
 # Оставьте пустым, чтобы не проверять: make EXPECTED_SHA256=
 EXPECTED_SHA256 ?=
@@ -52,7 +57,8 @@ SSH := $(SSH_WRAP) $(strip $(SSH_OPTS)) $(SSH_USER)@$(SSH_HOST)
 help:
 	@echo "connect — ssh root@… (если в .env есть PASSWORD — без запроса, нужен sshpass)"
 	@echo "bootstrap-site — один zip с релиза (dist + package.json) → $(SITE_ROOT), npm install на VPS"
-	@echo "update-ui      — быстрый деплой UI/контента: обновить server+client из zip, без npm install"
+	@echo "update-ui      — деплой UI: VPS качает zip с GitHub Releases (медленно)"
+	@echo "update-ui-upload — скачать в local/ → scp на VPS → распаковка"
 	@echo "clean          — на VPS: остановить $(PM2_APP_NAME), удалить $(SITE_ROOT), пустой каталог для следующего деплоя"
 	@echo "start          — pm2 + node $(SITE_ROOT)/server/entry.mjs (порт $(SERVE_PORT), Astro + Node)"
 	@echo "stop           — остановить процесс $(PM2_APP_NAME)"
@@ -75,6 +81,13 @@ bootstrap-site:
 # Быстрый деплой UI/контента: только server+client + pm2 restart; если package.json в релизе изменился — остановка с подсказкой на bootstrap-site.
 update-ui:
 	$(SSH) env REMOTE_DIR='$(REMOTE_DIR)' DOWNLOAD_URL='$(DOWNLOAD_URL)' EXPECTED_SHA256='$(EXPECTED_SHA256)' PM2_APP_NAME='$(PM2_APP_NAME)' SERVE_PORT='$(SERVE_PORT)' bash -s < $(UPDATE_UI_SH)
+
+# TimeWebCloud/local/astro-dist-<tag>.zip — всегда качается сюда, затем scp на VPS
+update-ui-upload:
+	mkdir -p '$(LOCAL_DIR)'
+	curl -fSL -o '$(LOCAL_ZIP)' '$(DOWNLOAD_URL)'
+	$(SCP_WRAP) $(strip $(SSH_OPTS)) '$(LOCAL_ZIP)' '$(SSH_USER)@$(SSH_HOST):$(REMOTE_ZIP)'
+	$(SSH) env REMOTE_DIR='$(REMOTE_DIR)' ZIP_PATH='$(REMOTE_ZIP)' EXPECTED_SHA256='$(EXPECTED_SHA256)' PM2_APP_NAME='$(PM2_APP_NAME)' SERVE_PORT='$(SERVE_PORT)' bash -s < $(UPDATE_UI_FROM_ZIP_SH)
 
 # Убрать выкладку на сервере; дальше: make bootstrap-site && make start && make nginx-proxy
 clean:

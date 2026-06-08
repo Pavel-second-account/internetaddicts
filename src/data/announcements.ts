@@ -20,9 +20,9 @@ export type SiteAnnouncement = {
 
 export const siteAnnouncements: SiteAnnouncement[] = [
 	{
-		id: "picnic-june-2026",
+		id: "picnic-june-2026-v2",
 		enabled: true,
-		activeUntil: "2026-07-05",
+		activeUntil: "2026-06-05",
 		title: "Традиционный летний Пикник АИЗ пройдет в Москве уже 7 июня",
 		where:
 			"Парк Фили на набережной Москвы-реки, 10 минут пешком от м.Филевский Парк",

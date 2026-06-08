@@ -28,3 +28,6 @@ pnpm-debug.log*
 # Internal usage
 Crawler/
 internal/
+
+# Deploy artifacts
+TimeWebCloud/local/*.zip
