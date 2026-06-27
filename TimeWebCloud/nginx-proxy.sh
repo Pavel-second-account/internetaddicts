@@ -126,6 +126,11 @@ server {
         root /var/www/html;
     }
 
+    location /audio/ {
+        root /var/www;
+        add_header Accept-Ranges bytes;
+    }
+
     location / {
         proxy_pass http://127.0.0.1:${BACKEND_PORT};
         proxy_http_version 1.1;
@@ -144,6 +149,11 @@ server {
     listen [::]:443 ssl http2;
     server_name ${SERVER_NAMES};
 $(echo "$ssl_lines")
+
+    location /audio/ {
+        root /var/www;
+        add_header Accept-Ranges bytes;
+    }
 
     location / {
         proxy_pass http://127.0.0.1:${BACKEND_PORT};

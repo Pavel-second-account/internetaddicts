@@ -10,23 +10,41 @@ const audioSrc = "/audio/speakers/demyan_2.mp3"
 	title="Спикерские"
 	desc="Спикерские выступления членов АИЗ — опыт выздоровления от интернет-зависимости."
 >
-	<h1 class="text-3xl font-bold">Спикерские</h1>
+	<h1 class="text-3xl font-bold mb-2">Спикерские</h1>
 
-	{speaker && (
-		<article class="flex flex-col gap-4 border border-zinc-200 rounded-2xl p-6 shadow-sm max-w-2xl">
-			<div class="flex flex-col gap-1">
-				<h2 class="text-xl font-semibold">{speaker.data.title}</h2>
-				<time class="text-sm text-zinc-400">{speaker.data.pubDate}</time>
+	<div class="max-w-2xl">
+		{speaker && (
+			<div class="speaker-row border-b border-zinc-100">
+				<div class="flex items-center justify-between gap-4 py-3">
+					<div class="flex items-baseline gap-4 min-w-0">
+						<span class="font-semibold text-zinc-900 whitespace-nowrap">Демьян</span>
+						<span class="text-zinc-500 truncate">Служение</span>
+					</div>
+					<button
+						class="listen-btn whitespace-nowrap text-[#0098EA] underline underline-offset-2 text-sm shrink-0 cursor-pointer bg-transparent border-none"
+						aria-expanded="false"
+					>
+						Слушать
+					</button>
+				</div>
+
+				<div class="player-wrap hidden pb-3">
+					<audio controls class="w-full" src={audioSrc}>
+						Ваш браузер не поддерживает аудио.
+					</audio>
+				</div>
 			</div>
-
-			{speaker.data.desc && (
-				<p class="text-zinc-600 leading-relaxed">{speaker.data.desc}</p>
-			)}
-
-			<audio controls class="w-full mt-2">
-				<source src={audioSrc} type="audio/mpeg" />
-				Ваш браузер не поддерживает аудио.
-			</audio>
-		</article>
-	)}
+		)}
+	</div>
 </Layout>
+
+<script>
+	document.querySelectorAll<HTMLButtonElement>(".listen-btn").forEach((btn) => {
+		btn.addEventListener("click", () => {
+			const row = btn.closest(".speaker-row")!
+			const player = row.querySelector<HTMLElement>(".player-wrap")!
+			const open = player.classList.toggle("hidden")
+			btn.setAttribute("aria-expanded", String(!open))
+		})
+	})
+</script>
