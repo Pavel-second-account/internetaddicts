@@ -1,7 +1,7 @@
 # Деплой на Timeweb Cloud: ssh root@хост. Пароль из TimeWebCloud/.env (PASSWORD=…) — через ssh-wrap.sh + sshpass.
 # Без PASSWORD в .env — обычный ssh (ключ или ручной ввод). IPv6: make SSH_OPTS=-6 SSH_HOST='$(IPv6)' bootstrap-site
 # Переменные из TimeWebCloud/.env подключаются как в Makefile (KEY=value, без пробелов вокруг =). Переопределяют значения по умолчанию ниже.
-.PHONY: help connect bootstrap-site update-ui update-ui-upload clean start stop nginx-proxy https diagnose reset-nginx-ssl
+.PHONY: help connect bootstrap-site update-ui update-ui-upload clean start stop nginx-proxy https diagnose reset-nginx-ssl upload-speakers
 
 TIMEWEB_DIR := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 -include $(TIMEWEB_DIR).env
@@ -9,6 +9,7 @@ export
 
 SSH_WRAP := $(TIMEWEB_DIR)ssh-wrap.sh
 LOCAL_DIR := $(TIMEWEB_DIR)local
+LOCAL_SPEAKERS_DIR := $(LOCAL_DIR)/speakers
 SCP_WRAP := $(LOCAL_DIR)/scp-wrap.sh
 BOOTSTRAP_SH := $(TIMEWEB_DIR)bootstrap-site.sh
 UPDATE_UI_SH := $(TIMEWEB_DIR)update-ui.sh
@@ -23,12 +24,13 @@ SSH_USER  ?= root
 SSH_HOST  ?= $(IPv4)
 SSH_OPTS  ?=
 REMOTE_DIR ?= /opt/internetaddicts
+REMOTE_AUDIO_DIR ?= /var/www/audio/speakers
 # = чтобы подхватывать REMOTE_DIR с командной строки
 SITE_ROOT = $(REMOTE_DIR)/current
 # Распакованный dist из CI: server/entry.mjs + client/ (Astro static + @astrojs/node, SSR где prerender=false)
 
 # GitHub Release v1.0.1 (Node standalone) → astro-dist-v1.0.1.zip. SHA от файла на Releases, не от Artifacts в Actions.
-RELEASE_TAG  ?= v1.2.0
+RELEASE_TAG  ?= v1.2.1
 RELEASE_ZIP  := astro-dist-$(RELEASE_TAG).zip
 DOWNLOAD_URL := https://github.com/Pavel-second-account/internetaddicts/releases/download/$(RELEASE_TAG)/$(RELEASE_ZIP)
 # package.json (и lock при наличии) внутри astro-dist-*.zip — отдельных ассетов на релизе нет
@@ -66,6 +68,7 @@ help:
 	@echo "https          — certbot certonly --webroot (по умолчанию DOMAIN+www; DNS должен указывать на VPS)"
 	@echo "diagnose       — проверки nginx/pm2/портов на VPS"
 	@echo "reset-nginx-ssl— удалить vhost $(DOMAIN) и LE-серт (certbot), затем reload nginx"
+	@echo "upload-speakers — загрузить аудио из local/speakers/ → $(REMOTE_AUDIO_DIR) на VPS (один раз, вне деплой-цикла)"
 	@echo "Пример IPv6:   make SSH_OPTS=-6 SSH_HOST='$(IPv6)' bootstrap-site"
 	@echo ""
 	@echo "Домен указывает на этот IP — дальше: nginx/Caddy на :80/:443, HTTPS (см. Изначальное исследование.md)"
@@ -115,6 +118,11 @@ https:
 diagnose:
 	$(SSH) bash -s $(DOMAIN) $(SERVE_PORT) < $(DIAGNOSE_SH)
 
+
+# Загрузка аудио-файлов спикерских на VPS (один раз; не входит в деплой-цикл)
+upload-speakers:
+	$(SSH) mkdir -p '$(REMOTE_AUDIO_DIR)'
+	$(SCP_WRAP) $(strip $(SSH_OPTS)) -r '$(LOCAL_SPEAKERS_DIR)/.' '$(SSH_USER)@$(SSH_HOST):$(REMOTE_AUDIO_DIR)/'
 
 reset-nginx-ssl:
 	$(SSH) sh -c "set -e; rm -f /etc/nginx/sites-enabled/$(DOMAIN).conf /etc/nginx/sites-available/$(DOMAIN).conf; if command -v certbot >/dev/null 2>&1; then certbot delete --cert-name $(DOMAIN) --non-interactive 2>/dev/null || true; fi; nginx -t; systemctl reload nginx || systemctl restart nginx"

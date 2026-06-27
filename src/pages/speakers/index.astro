@@ -1,0 +1,32 @@
+---
+import Layout from "@/layout/Layout.astro"
+import { getEntry } from "astro:content"
+
+const speaker = await getEntry("speakers", "demyan-sluzhenie")
+const audioSrc = "/audio/speakers/demyan_2.mp3"
+---
+
+<Layout
+	title="Спикерские"
+	desc="Спикерские выступления членов АИЗ — опыт выздоровления от интернет-зависимости."
+>
+	<h1 class="text-3xl font-bold">Спикерские</h1>
+
+	{speaker && (
+		<article class="flex flex-col gap-4 border border-zinc-200 rounded-2xl p-6 shadow-sm max-w-2xl">
+			<div class="flex flex-col gap-1">
+				<h2 class="text-xl font-semibold">{speaker.data.title}</h2>
+				<time class="text-sm text-zinc-400">{speaker.data.pubDate}</time>
+			</div>
+
+			{speaker.data.desc && (
+				<p class="text-zinc-600 leading-relaxed">{speaker.data.desc}</p>
+			)}
+
+			<audio controls class="w-full mt-2">
+				<source src={audioSrc} type="audio/mpeg" />
+				Ваш браузер не поддерживает аудио.
+			</audio>
+		</article>
+	)}
+</Layout>
