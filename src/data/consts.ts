@@ -56,9 +56,9 @@ export const navigation = [
 	},
 	{
 		label: "Спикерские",
-		href: "",
+		href: "/speakers/",
 		target: "",
-		icon: "",
+		icon: "mdi:bullhorn",
 		style: "",
 		speakerLinks: [
 			{

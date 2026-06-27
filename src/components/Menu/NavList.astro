@@ -17,7 +17,14 @@ import { Icon } from "astro-icon/components"
 						"inline-flex shrink-0 items-center gap-2 no-underline",
 					)}
 				>
-					<span class="whitespace-nowrap text-sm font-medium">{link.label}</span>
+					{link.href ? (
+						<a href={link.href} class="inline-flex items-center gap-1 whitespace-nowrap text-sm font-medium no-underline">
+							{link.icon && <Icon name={link.icon} class="text-base" aria-hidden="true" />}
+							{link.label}
+						</a>
+					) : (
+						<span class="whitespace-nowrap text-sm font-medium">{link.label}</span>
+					)}
 					<span
 						class:list={[
 							"inline-flex items-center gap-0.5 rounded-lg px-1 py-0.5",
