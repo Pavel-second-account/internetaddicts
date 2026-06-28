@@ -40,11 +40,11 @@ const reversed = [...SPEAKERS].reverse()
 				class="speaker-row hidden"
 				data-tags={s.tags.join("|")}
 			>
-				<div class="flex items-center gap-4 px-4 py-4">
-					<span class="font-bold text-xl text-zinc-900 whitespace-nowrap shrink-0 w-40">{s.speaker}</span>
-					<span class="text-lg text-zinc-500 grow min-w-0 truncate">{s.title}</span>
-					<div class="w-20 shrink-0 flex justify-end">
-						{s.ext && (
+				<div class="flex flex-col md:flex-row md:items-center gap-1 md:gap-4 px-4 py-4">
+					<span class="font-bold text-xl text-zinc-900 md:whitespace-nowrap md:shrink-0 md:w-40">{s.speaker}</span>
+					<span class="text-lg text-zinc-500 md:grow min-w-0">{s.title}</span>
+					{s.ext && (
+						<div class="flex gap-4 shrink-0 mt-1 md:mt-0">
 							<button
 								class="listen-btn whitespace-nowrap text-lg text-[#0098EA] underline underline-offset-2 cursor-pointer bg-transparent border-none"
 								data-src={`/audio/speakers/${s.code}.${s.ext}`}
@@ -52,10 +52,6 @@ const reversed = [...SPEAKERS].reverse()
 							>
 								Слушать
 							</button>
-						)}
-					</div>
-					<div class="w-12 shrink-0 flex justify-end">
-						{s.ext && (
 							<a
 								href={`${CLOUD_BASE}/${s.code}.${s.ext}`}
 								target="_blank"
@@ -64,8 +60,8 @@ const reversed = [...SPEAKERS].reverse()
 							>
 								Диск
 							</a>
-						)}
-					</div>
+						</div>
+					)}
 				</div>
 				<div class="player-wrap hidden px-4 pb-4">
 					<audio controls class="w-full"></audio>

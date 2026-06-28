@@ -30,7 +30,7 @@ SITE_ROOT = $(REMOTE_DIR)/current
 # Распакованный dist из CI: server/entry.mjs + client/ (Astro static + @astrojs/node, SSR где prerender=false)
 
 # GitHub Release v1.0.1 (Node standalone) → astro-dist-v1.0.1.zip. SHA от файла на Releases, не от Artifacts в Actions.
-RELEASE_TAG  ?= v1.2.5
+RELEASE_TAG  ?= v1.2.7
 RELEASE_ZIP  := astro-dist-$(RELEASE_TAG).zip
 DOWNLOAD_URL := https://github.com/Pavel-second-account/internetaddicts/releases/download/$(RELEASE_TAG)/$(RELEASE_ZIP)
 # package.json (и lock при наличии) внутри astro-dist-*.zip — отдельных ассетов на релизе нет
@@ -91,6 +91,7 @@ update-ui-upload:
 	curl -fSL -o '$(LOCAL_ZIP)' '$(DOWNLOAD_URL)'
 	$(SCP_WRAP) $(strip $(SSH_OPTS)) '$(LOCAL_ZIP)' '$(SSH_USER)@$(SSH_HOST):$(REMOTE_ZIP)'
 	$(SSH) env REMOTE_DIR='$(REMOTE_DIR)' ZIP_PATH='$(REMOTE_ZIP)' EXPECTED_SHA256='$(EXPECTED_SHA256)' PM2_APP_NAME='$(PM2_APP_NAME)' SERVE_PORT='$(SERVE_PORT)' bash -s < $(UPDATE_UI_FROM_ZIP_SH)
+	rm -f '$(LOCAL_ZIP)'
 
 # Убрать выкладку на сервере; дальше: make bootstrap-site && make start && make nginx-proxy
 clean:
