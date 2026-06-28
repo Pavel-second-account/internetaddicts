@@ -8,7 +8,7 @@ export type Speaker = {
 	tags: SpeakerTag[]
 }
 
-export const SPEAKER_TAGS: SpeakerTag[] = ["мужчина", "женщина", "прохождение шагов", "семинар", "служение"]
+export const SPEAKER_TAGS: SpeakerTag[] = ["женщина", "мужчина", "прохождение шагов", "семинар", "служение"]
 
 export const CLOUD_BASE = "https://cloud.mail.ru/public/HiPW/fRDrvxMRE"
 
@@ -56,5 +56,5 @@ export const SPEAKERS: Speaker[] = [
 	{ speaker: "Дмитрий",                   title: "Опыт прохождения 12 шагов в малой группе со спонсором",                                                  code: "dmitriy_1",            ext: "mp3",  tags: ["мужчина", "прохождение шагов"]          },
 	{ speaker: "Сергей",                    title: "Моё выздоровление от интернет-зависимости",                                                              code: "sergey_4",             ext: "m4a",  tags: ["мужчина"]                               },
 	{ speaker: "Татьяна Ш.",               title: "Инструменты трезвости в интернет-зависимости, как их вижу я",                                            code: "tatyana_sh_2",         ext: "m4a",  tags: ["женщина"]                               },
-	{ speaker: "Дмитрий",                   title: "1 год в программе",                                                                                      code: "dmitriy_2",            ext: "m4a",  tags: ["мужчина", "прохождение шагов"]          },
+	{ speaker: "Дмитрий",                   title: "1 год в программе",                                                                                      code: "dmitriy_2",            ext: "m4a",  tags: ["мужчина"]                               },
 ]
