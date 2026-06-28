@@ -1,6 +1,6 @@
 ---
 import Layout from "@/layout/Layout.astro"
-import { SPEAKERS } from "@/data/speakers"
+import { SPEAKERS, CLOUD_BASE } from "@/data/speakers"
 
 const PAGE_SIZE = 10
 const totalPages = Math.ceil(SPEAKERS.length / PAGE_SIZE)
@@ -18,7 +18,7 @@ const pages = Array.from({ length: totalPages }, (_, i) =>
 >
 	<h1 class="text-3xl font-bold mb-4">Спикерские</h1>
 
-	<p class="text-zinc-500 text-base border-l-4 border-zinc-200 pl-4 mb-6 leading-relaxed">
+	<p class="text-zinc-500 text-xl border-l-4 border-zinc-200 pl-4 mb-6 leading-relaxed">
 		Спикерские выступления членов АИЗ.<br />
 		Рассказы в этом разделе отображают личный опыт и мнение отдельных авторов, а не сообщества АИЗ в целом.
 	</p>
@@ -28,25 +28,48 @@ const pages = Array.from({ length: totalPages }, (_, i) =>
 			id={`page-${pageIndex}`}
 			class:list={["speakers-page rounded-xl overflow-hidden border border-zinc-200 mb-6", pageIndex !== 0 && "hidden"]}
 		>
+			<div class="flex items-center gap-4 px-4 py-2 bg-zinc-100 border-b border-zinc-200">
+				<span class="font-semibold text-sm text-zinc-400 uppercase tracking-wide w-40 shrink-0">Автор</span>
+				<span class="font-semibold text-sm text-zinc-400 uppercase tracking-wide grow text-right">Тема</span>
+				<span class="w-20 shrink-0" />
+				<span class="w-12 shrink-0" />
+			</div>
+
 			{page.map((s, i) => (
-				<div class={`speaker-row ${i % 2 === 0 ? "bg-white" : "bg-zinc-50"}`}>
-					<div class="flex items-center justify-between gap-4 px-4 py-4">
-						<span class="font-bold text-xl text-zinc-900 whitespace-nowrap shrink-0">{s.speaker}</span>
-						<span class="text-lg text-zinc-500 grow min-w-0 truncate px-3">{s.title}</span>
-						{s.ext && (
-							<button
-								class="listen-btn whitespace-nowrap text-lg text-[#0098EA] underline underline-offset-2 shrink-0 cursor-pointer bg-transparent border-none"
-								data-src={`/audio/speakers/${s.code}.${s.ext}`}
-								aria-expanded="false"
-							>
-								Слушать
-							</button>
-						)}
+					<div class={`speaker-row ${i % 2 === 0 ? "bg-white" : "bg-zinc-50"}`}>
+						<div class="flex items-center gap-4 px-4 py-4">
+							<span class="font-bold text-xl text-zinc-900 whitespace-nowrap shrink-0 w-40">{s.speaker}</span>
+							<span class="text-lg text-zinc-500 grow min-w-0 truncate text-right">
+								{s.title}
+							</span>
+							<div class="w-20 shrink-0 flex justify-end">
+								{s.ext && (
+									<button
+										class="listen-btn whitespace-nowrap text-lg text-[#0098EA] underline underline-offset-2 cursor-pointer bg-transparent border-none"
+										data-src={`/audio/speakers/${s.code}.${s.ext}`}
+										aria-expanded="false"
+									>
+										Слушать
+									</button>
+								)}
+							</div>
+							<div class="w-12 shrink-0 flex justify-end">
+								{s.ext && (
+									<a
+										href={`${CLOUD_BASE}/${s.code}.${s.ext}`}
+										target="_blank"
+										rel="noopener noreferrer"
+										class="text-lg text-[#0098EA] underline underline-offset-2 whitespace-nowrap"
+									>
+										Диск
+									</a>
+								)}
+							</div>
+						</div>
+						<div class="player-wrap hidden px-4 pb-4">
+							<audio controls class="w-full"></audio>
+						</div>
 					</div>
-					<div class="player-wrap hidden px-4 pb-4">
-						<audio controls class="w-full"></audio>
-					</div>
-				</div>
 			))}
 		</div>
 	))}

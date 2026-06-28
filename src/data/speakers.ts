@@ -5,6 +5,8 @@ export type Speaker = {
 	ext: "m4a" | "mp3" | "ogg" | null
 }
 
+export const CLOUD_BASE = "https://cloud.mail.ru/public/HiPW/fRDrvxMRE"
+
 export const SPEAKERS: Speaker[] = [
 	{ speaker: "Евгений Н. (г.Чебоксары)", title: "Как я избавился от интернет-зависимости",                                                               code: "evgeniy_n_1",          ext: "m4a"  },
 	{ speaker: "Стас",                      title: "—",                                                                                                      code: "stas_1",               ext: "m4a"  },
@@ -31,18 +33,18 @@ export const SPEAKERS: Speaker[] = [
 	{ speaker: "Татьяна (Кемерово)",        title: "Шаги в повседневной жизни",                                                                              code: "tatyana_kemerovo_1",   ext: "ogg"  },
 	{ speaker: "Настя",                     title: "Опыт служения Ведущим собрания и его влияние на личное выздоровление",                                   code: "nastya_1",             ext: "mp3"  },
 	{ speaker: "Демьян",                    title: "Служение",                                                                                               code: "demyan_2",             ext: "mp3"  },
-	{ speaker: "Салима",                    title: "Как изменилась жизнь после прохождения шагов",                                                           code: "salima_1",             ext: null   },
+	{ speaker: "Салима",                    title: "Как изменилась жизнь после прохождения шагов",                                                           code: "salima_1",             ext: "ogg"  },
 	{ speaker: "Демьян",                    title: "Здоровые границы",                                                                                       code: "demyan_3",             ext: "ogg"  },
 	{ speaker: "Станислав",                 title: "Начало служения в сообществе: как начать, для чего это и что это значит на практике",                    code: "stanislav_1",          ext: "ogg"  },
-	{ speaker: "Татьяна Ш.",               title: "О выздоровлении от интернет-зависимости",                                                                code: "tatyana_sh_1",         ext: null   },
+	{ speaker: "Татьяна Ш.",               title: "О выздоровлении от интернет-зависимости",                                                                code: "tatyana_sh_1",         ext: "ogg"  },
 	{ speaker: "Наталья",                   title: "Прохождение шагов в малой группе со спонсором",                                                          code: "natalya_1",            ext: "mp3"  },
-	{ speaker: "Даниил",                    title: "Выздоровление в АИЗ",                                                                                    code: "daniil_2",             ext: null   },
+	{ speaker: "Даниил",                    title: "Выздоровление в АИЗ",                                                                                    code: "daniil_2",             ext: "mp3"  },
 	{ speaker: "Алена и Алексей",           title: "Опыт прохождения 12-ти шагов Медиа Зависимых, 1-й месяц",                                               code: "alena_aleksey_1",      ext: "ogg"  },
 	{ speaker: "Станислав",                 title: "Первые шаги в АИЗ",                                                                                      code: "stanislav_2",          ext: "mp3"  },
 	{ speaker: "Алексей",                   title: "Опыт прохождения шагов в малой группе со спонсором",                                                     code: "aleksey_1",            ext: "mp3"  },
 	{ speaker: "Евгений",                   title: "Опыт прохождения шагов в малой группе со спонсором",                                                     code: "evgeniy_2",            ext: "mp3"  },
 	{ speaker: "Анастасия",                 title: "12 шагов за 3 месяца по программе Сергея П. — Анализ причин успеха в выздоровлении, часть 1",            code: "anastasiya_1",         ext: null   },
-	{ speaker: "Настя",                     title: "— (1 год 4 мес. в программе)",                                                                           code: "nastya_2",             ext: "mp3"  },
+	{ speaker: "Настя",                     title: "—",                                                                                                      code: "nastya_2",             ext: "mp3"  },
 	{ speaker: "Анастасия",                 title: "12 шагов за 3 месяца по программе Сергея П. — Анализ причин успеха в выздоровлении, часть 2",            code: "anastasiya_2",         ext: "mp3"  },
 	{ speaker: "Александра",                title: "Выздоровление от интернет-зависимости в АИЗ: что было, что стало",                                       code: "aleksandra_1",         ext: "ogg"  },
 	{ speaker: "Маргарита",                 title: "Опыт прохождения программы 12 шагов в сообществе АИЗ",                                                   code: "margarita_1",          ext: "ogg"  },
