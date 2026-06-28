@@ -1,25 +1,25 @@
-# Деплой на Timeweb Cloud: ssh root@хост. Пароль из TimeWebCloud/.env (PASSWORD=…) — через ssh-wrap.sh + sshpass.
+# Деплой на VPS: ssh root@хост. Пароль из .env (PASSWORD=…) — через ssh-wrap.sh + sshpass.
 # Без PASSWORD в .env — обычный ssh (ключ или ручной ввод). IPv6: make SSH_OPTS=-6 SSH_HOST='$(IPv6)' bootstrap-site
-# Переменные из TimeWebCloud/.env подключаются как в Makefile (KEY=value, без пробелов вокруг =). Переопределяют значения по умолчанию ниже.
+# Переменные из .env подключаются как в Makefile (KEY=value, без пробелов вокруг =). Переопределяют значения по умолчанию ниже.
 .PHONY: help connect bootstrap-site update-ui update-ui-upload clean start stop nginx-proxy https diagnose reset-nginx-ssl upload-speakers
 
-TIMEWEB_DIR := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
--include $(TIMEWEB_DIR).env
+VPS_DIR := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
+-include $(VPS_DIR).env
 export
 
-SSH_WRAP := $(TIMEWEB_DIR)ssh-wrap.sh
-LOCAL_DIR := $(TIMEWEB_DIR)local
+SSH_WRAP := $(VPS_DIR)ssh-wrap.sh
+LOCAL_DIR := $(VPS_DIR)local
 LOCAL_SPEAKERS_DIR := $(LOCAL_DIR)/speakers
 SCP_WRAP := $(LOCAL_DIR)/scp-wrap.sh
-BOOTSTRAP_SH := $(TIMEWEB_DIR)bootstrap-site.sh
-UPDATE_UI_SH := $(TIMEWEB_DIR)update-ui.sh
+BOOTSTRAP_SH := $(VPS_DIR)bootstrap-site.sh
+UPDATE_UI_SH := $(VPS_DIR)update-ui.sh
 UPDATE_UI_FROM_ZIP_SH := $(LOCAL_DIR)/update-ui-from-zip.sh
-NGINX_PROXY_SH := $(TIMEWEB_DIR)nginx-proxy.sh
-DIAGNOSE_SH := $(TIMEWEB_DIR)diagnose.sh
-CERTBOT_SH := $(TIMEWEB_DIR)certbot-nginx.sh
+NGINX_PROXY_SH := $(VPS_DIR)nginx-proxy.sh
+DIAGNOSE_SH := $(VPS_DIR)diagnose.sh
+CERTBOT_SH := $(VPS_DIR)certbot-nginx.sh
 
-IPv4 ?= 72.56.9.194
-IPv6 ?= 2a03:6f00:a::1:b73f
+IPv4 ?=
+IPv6 ?=
 SSH_USER  ?= root
 SSH_HOST  ?= $(IPv4)
 SSH_OPTS  ?=
@@ -46,7 +46,7 @@ SERVE_PORT   ?= 4321
 
 # Домен для server_name в nginx (стейдж: make DOMAIN=internetaddicts-dev2.ru nginx-proxy)
 DOMAIN ?= internetaddicts.ru
-# Гибрид (apex на VPS, сайт на www у Timeweb): make nginx-proxy REDIRECT_TO=https://www.internetaddicts.ru
+# Редирект: make nginx-proxy REDIRECT_TO=https://www.internetaddicts.ru
 REDIRECT_TO ?=
 # make https: email для ACME (можно задать в .env: CERTBOT_EMAIL=…)
 CERTBOT_EMAIL ?=
@@ -85,7 +85,7 @@ bootstrap-site:
 update-ui:
 	$(SSH) env REMOTE_DIR='$(REMOTE_DIR)' DOWNLOAD_URL='$(DOWNLOAD_URL)' EXPECTED_SHA256='$(EXPECTED_SHA256)' PM2_APP_NAME='$(PM2_APP_NAME)' SERVE_PORT='$(SERVE_PORT)' bash -s < $(UPDATE_UI_SH)
 
-# TimeWebCloud/local/astro-dist-<tag>.zip — всегда качается сюда, затем scp на VPS
+# local/astro-dist-<tag>.zip — всегда качается сюда, затем scp на VPS
 update-ui-upload:
 	mkdir -p '$(LOCAL_DIR)'
 	curl -fSL -o '$(LOCAL_ZIP)' '$(DOWNLOAD_URL)'

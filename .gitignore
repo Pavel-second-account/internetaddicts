@@ -30,4 +30,5 @@ Crawler/
 internal/
 
 # Deploy artifacts
-TimeWebCloud/local/*.zip
+cloud/local/*.zip
+cloud/local/speakers/
