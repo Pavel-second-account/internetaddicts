@@ -1,11 +1,10 @@
 ---
 import Layout from "@/layout/Layout.astro"
-import { SPEAKERS, CLOUD_BASE } from "@/data/speakers"
+import { SPEAKERS, SPEAKER_TAGS, CLOUD_BASE } from "@/data/speakers"
 
 const PAGE_SIZE = 10
 const totalPages = Math.ceil(SPEAKERS.length / PAGE_SIZE)
 
-// Последние записи первыми: реверс, затем разбивка на страницы
 const reversed = [...SPEAKERS].reverse()
 const pages = Array.from({ length: totalPages }, (_, i) =>
 	reversed.slice(i * PAGE_SIZE, (i + 1) * PAGE_SIZE)
@@ -23,6 +22,17 @@ const pages = Array.from({ length: totalPages }, (_, i) =>
 		Рассказы в этом разделе отображают личный опыт и мнение отдельных авторов, а не сообщества АИЗ в целом.
 	</p>
 
+	<div class="flex flex-wrap gap-2 mb-6">
+		<button class="tag-btn active-tag px-3 py-1 rounded-full text-sm border transition-colors bg-[#0098EA] text-white border-[#0098EA]" data-tag="">
+			Все
+		</button>
+		{SPEAKER_TAGS.map(tag => (
+			<button class="tag-btn px-3 py-1 rounded-full text-sm border transition-colors bg-white text-zinc-600 border-zinc-200 hover:border-[#0098EA] hover:text-[#0098EA]" data-tag={tag}>
+				{tag}
+			</button>
+		))}
+	</div>
+
 	{pages.map((page, pageIndex) => (
 		<div
 			id={`page-${pageIndex}`}
@@ -30,52 +40,55 @@ const pages = Array.from({ length: totalPages }, (_, i) =>
 		>
 			<div class="flex items-center gap-4 px-4 py-2 bg-zinc-100 border-b border-zinc-200">
 				<span class="font-semibold text-sm text-zinc-400 uppercase tracking-wide w-40 shrink-0">Автор</span>
-				<span class="font-semibold text-sm text-zinc-400 uppercase tracking-wide grow text-right">Тема</span>
+				<span class="font-semibold text-sm text-zinc-400 uppercase tracking-wide grow">Тема</span>
 				<span class="w-20 shrink-0" />
 				<span class="w-12 shrink-0" />
 			</div>
 
 			{page.map((s, i) => (
-					<div class={`speaker-row ${i % 2 === 0 ? "bg-white" : "bg-zinc-50"}`}>
-						<div class="flex items-center gap-4 px-4 py-4">
-							<span class="font-bold text-xl text-zinc-900 whitespace-nowrap shrink-0 w-40">{s.speaker}</span>
-							<span class="text-lg text-zinc-500 grow min-w-0 truncate text-right">
-								{s.title}
-							</span>
-							<div class="w-20 shrink-0 flex justify-end">
-								{s.ext && (
-									<button
-										class="listen-btn whitespace-nowrap text-lg text-[#0098EA] underline underline-offset-2 cursor-pointer bg-transparent border-none"
-										data-src={`/audio/speakers/${s.code}.${s.ext}`}
-										aria-expanded="false"
-									>
-										Слушать
-									</button>
-								)}
-							</div>
-							<div class="w-12 shrink-0 flex justify-end">
-								{s.ext && (
-									<a
-										href={`${CLOUD_BASE}/${s.code}.${s.ext}`}
-										target="_blank"
-										rel="noopener noreferrer"
-										class="text-lg text-[#0098EA] underline underline-offset-2 whitespace-nowrap"
-									>
-										Диск
-									</a>
-								)}
-							</div>
+				<div
+					class={`speaker-row ${i % 2 === 0 ? "bg-white" : "bg-zinc-50"}`}
+					data-tags={s.tags.join("|")}
+				>
+					<div class="flex items-center gap-4 px-4 py-4">
+						<span class="font-bold text-xl text-zinc-900 whitespace-nowrap shrink-0 w-40">{s.speaker}</span>
+						<span class="text-lg text-zinc-500 grow min-w-0 truncate">
+							{s.title}
+						</span>
+						<div class="w-20 shrink-0 flex justify-end">
+							{s.ext && (
+								<button
+									class="listen-btn whitespace-nowrap text-lg text-[#0098EA] underline underline-offset-2 cursor-pointer bg-transparent border-none"
+									data-src={`/audio/speakers/${s.code}.${s.ext}`}
+									aria-expanded="false"
+								>
+									Слушать
+								</button>
+							)}
 						</div>
-						<div class="player-wrap hidden px-4 pb-4">
-							<audio controls class="w-full"></audio>
+						<div class="w-12 shrink-0 flex justify-end">
+							{s.ext && (
+								<a
+									href={`${CLOUD_BASE}/${s.code}.${s.ext}`}
+									target="_blank"
+									rel="noopener noreferrer"
+									class="text-lg text-[#0098EA] underline underline-offset-2 whitespace-nowrap"
+								>
+									Диск
+								</a>
+							)}
 						</div>
 					</div>
+					<div class="player-wrap hidden px-4 pb-4">
+						<audio controls class="w-full"></audio>
+					</div>
+				</div>
 			))}
 		</div>
 	))}
 
 	{totalPages > 1 && (
-		<div class="flex gap-2 flex-wrap">
+		<div id="pagination" class="flex gap-2 flex-wrap">
 			{pages.map((_, i) => (
 				<button
 					class:list={[
@@ -118,21 +131,59 @@ const pages = Array.from({ length: totalPages }, (_, i) =>
 	// Пагинация
 	const pageBtns = document.querySelectorAll<HTMLButtonElement>(".page-btn")
 	const pageBlocks = document.querySelectorAll<HTMLElement>(".speakers-page")
+	const pagination = document.getElementById("pagination")
+
+	let currentPage = 0
+	let activeTag = ""
+
+	function showPage(idx: number) {
+		currentPage = idx
+		pageBlocks.forEach((block, i) => block.classList.toggle("hidden", i !== idx))
+		pageBtns.forEach((b) => {
+			const active = Number(b.dataset.page) === idx
+			b.classList.toggle("bg-[#0098EA]", active)
+			b.classList.toggle("text-white", active)
+			b.classList.toggle("border-[#0098EA]", active)
+			b.classList.toggle("bg-white", !active)
+			b.classList.toggle("text-zinc-600", !active)
+		})
+	}
+
+	function applyFilter(tag: string) {
+		activeTag = tag
+		const allRows = document.querySelectorAll<HTMLElement>(".speaker-row")
+
+		if (!tag) {
+			// Сбрасываем фильтр — показываем пагинацию, скрываем все строки кроме текущей страницы
+			allRows.forEach((row) => row.classList.remove("hidden"))
+			if (pagination) pagination.classList.remove("hidden")
+			showPage(0)
+		} else {
+			// Показываем все страницы, скрываем строки не по тегу
+			pageBlocks.forEach((block) => block.classList.remove("hidden"))
+			if (pagination) pagination.classList.add("hidden")
+			allRows.forEach((row) => {
+				const tags = (row.dataset.tags ?? "").split("|").filter(Boolean)
+				row.classList.toggle("hidden", !tags.includes(tag))
+			})
+		}
+	}
 
 	pageBtns.forEach((btn) => {
+		btn.addEventListener("click", () => showPage(Number(btn.dataset.page)))
+	})
+
+	document.querySelectorAll<HTMLButtonElement>(".tag-btn").forEach((btn) => {
 		btn.addEventListener("click", () => {
-			const target = Number(btn.dataset.page)
-
-			pageBlocks.forEach((block, i) => block.classList.toggle("hidden", i !== target))
-
-			pageBtns.forEach((b) => {
-				const active = Number(b.dataset.page) === target
-				b.classList.toggle("bg-[#0098EA]", active)
-				b.classList.toggle("text-white", active)
-				b.classList.toggle("border-[#0098EA]", active)
-				b.classList.toggle("bg-white", !active)
-				b.classList.toggle("text-zinc-600", !active)
+			document.querySelectorAll<HTMLButtonElement>(".tag-btn").forEach((b) => {
+				const isActive = b === btn
+				b.classList.toggle("bg-[#0098EA]", isActive)
+				b.classList.toggle("text-white", isActive)
+				b.classList.toggle("border-[#0098EA]", isActive)
+				b.classList.toggle("bg-white", !isActive)
+				b.classList.toggle("text-zinc-600", !isActive)
 			})
+			applyFilter(btn.dataset.tag ?? "")
 		})
 	})
 </script>

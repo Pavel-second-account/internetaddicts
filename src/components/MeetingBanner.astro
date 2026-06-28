@@ -1,0 +1,92 @@
+---
+// Shown only during active online meeting windows (MSK = UTC+3)
+// Schedule: Mon 10:00, Tue 12:00, Wed 12:00, Thu 10:00, Thu 20:00, Fri 09:00 — each ~60 min
+const ZOOM_LINK = "https://us06web.zoom.us/j/86283420410?pwd=WAEyY3dcElfcgFseI9Y7Y8qYNZyRG9.1"
+const CHAT_LINK = "https://t.me/aiz_meetings/9057"
+const DISMISS_KEY = "meeting_banner_dismissed_date"
+---
+
+<div
+	id="meeting-banner"
+	class="fixed bottom-0 inset-x-0 z-50 translate-y-full transition-transform duration-300"
+	role="status"
+	aria-live="polite"
+>
+	<div class="bg-[#0098EA] text-white px-4 py-3 flex items-center justify-between gap-4 flex-wrap shadow-[0_-2px_12px_rgba(0,0,0,0.15)]">
+		<p class="text-sm font-medium leading-snug">
+			Сейчас идёт онлайн-собрание. Заходите —
+			<a
+				href={ZOOM_LINK}
+				target="_blank"
+				rel="noopener noreferrer"
+				class="underline underline-offset-2 font-semibold hover:opacity-80"
+			>Zoom</a>
+			&nbsp;|&nbsp;
+			<a
+				href={CHAT_LINK}
+				target="_blank"
+				rel="noopener noreferrer"
+				class="underline underline-offset-2 font-semibold hover:opacity-80"
+			>Чат</a>
+		</p>
+		<button
+			id="meeting-banner-close"
+			type="button"
+			class="shrink-0 text-white/80 hover:text-white text-xl leading-none px-1"
+			aria-label="Закрыть"
+		>×</button>
+	</div>
+</div>
+
+<script define:vars={{ DISMISS_KEY }}>
+	const MEETINGS_MSK = [
+		{ day: 1, hour: 10, min: 0 },
+		{ day: 2, hour: 12, min: 0 },
+		{ day: 3, hour: 12, min: 0 },
+		{ day: 4, hour: 10, min: 0 },
+		{ day: 4, hour: 20, min: 0 },
+		{ day: 5, hour: 9,  min: 0 },
+	]
+	const DURATION_MIN = 60
+
+	function getMskDate() {
+		const now = new Date()
+		const mskOffset = 3 * 60
+		const localOffset = -now.getTimezoneOffset()
+		return new Date(now.getTime() + (mskOffset - localOffset) * 60_000)
+	}
+
+	function isActiveMeeting() {
+		const msk = getMskDate()
+		const day = msk.getDay()
+		const minutes = msk.getHours() * 60 + msk.getMinutes()
+		return MEETINGS_MSK.some(({ day: d, hour, min }) => {
+			const start = hour * 60 + min
+			return day === d && minutes >= start && minutes < start + DURATION_MIN
+		})
+	}
+
+	function todayStr() {
+		const msk = getMskDate()
+		return msk.toISOString().slice(0, 10) // "YYYY-MM-DD"
+	}
+
+	const banner = document.getElementById("meeting-banner")
+	const closeBtn = document.getElementById("meeting-banner-close")
+
+	const dismissed = localStorage.getItem(DISMISS_KEY)
+
+	if (banner && isActiveMeeting() && dismissed !== todayStr()) {
+		// Slide up with slight delay so the CSS transition fires
+		requestAnimationFrame(() => {
+			requestAnimationFrame(() => {
+				banner.classList.remove("translate-y-full")
+			})
+		})
+	}
+
+	closeBtn?.addEventListener("click", () => {
+		localStorage.setItem(DISMISS_KEY, todayStr())
+		banner?.classList.add("translate-y-full")
+	})
+</script>

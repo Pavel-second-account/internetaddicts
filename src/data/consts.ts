@@ -55,24 +55,10 @@ export const navigation = [
 		style: "",
 	},
 	{
-		label: "Спикерские",
 		href: "/speakers/",
+		label: "Спикерские",
 		target: "",
 		icon: "mdi:bullhorn",
 		style: "",
-		speakerLinks: [
-			{
-				href: "https://www.youtube.com/@aiz_itaa",
-				icon: "mdi:youtube",
-				title: "Спикерские на YouTube",
-				accent: "youtube",
-			},
-			{
-				href: VK_VIDEO_SPEAKERS,
-				icon: "mdi:vk",
-				title: "Спикерские во VK Видео",
-				accent: "vk",
-			},
-		],
 	},
 ]
