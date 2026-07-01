@@ -32,7 +32,7 @@ const { data, body } = Astro.props
 				<span>{data.when}</span>{" "}
 				{data.dateTime && <span class="font-bold">{data.dateTime}</span>}
 			</p>
-			<p set:html={marked(body)} />
+			{body && <p set:html={marked(body)} />}
 			<a
 				href={data.link}
 				class="bg-blue-500 text-white justify-center px-2 py-1.5 rounded-lg flex items-center gap-1 transition-colors duration-75 ease-linear hover:bg-blue-400"
