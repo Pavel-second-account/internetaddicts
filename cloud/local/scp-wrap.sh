@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Как ssh-wrap.sh, но для scp (PASSWORD из TimeWebCloud/.env).
+# Как ssh-wrap.sh, но для scp (PASSWORD из cloud/.env).
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
