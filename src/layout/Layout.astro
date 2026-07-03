@@ -4,6 +4,7 @@ import "@/styles/global.css"
 import Footer from "../components/Footer.astro"
 import Links from "../components/Head/Links.astro"
 import Metrika from "../components/Head/Metrika.astro"
+import { feature_flags } from "../../config/feature.flags"
 import AnnouncementModal from "../components/AnnouncementModal.astro"
 import MeetingBanner from "../components/MeetingBanner.astro"
 import PwaPrompt from "../components/PwaPrompt.astro"
@@ -73,6 +74,6 @@ const typeSiteFinal = typeSite ?? "website"
 		<AnnouncementModal />
 		<MeetingBanner />
 		<PwaPrompt />
-		<Metrika />
+		{feature_flags.metrika && <Metrika />}
 	</body>
 </html>
