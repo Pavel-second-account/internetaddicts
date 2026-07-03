@@ -12,7 +12,7 @@ export default config({
 				kind: "local",
 			},
 	cloud: {
-		project: "aiz-site/internetaddicts",
+		project: "aiz-site-2/internetaddicts",
 	},
 	collections,
 });
