@@ -15,7 +15,7 @@ export default defineConfig({
     prefetch: {
         defaultStrategy: "viewport",
     },
-    integrations: [solid(), mdx(), sitemap(), icon(), keystatic({ configPath: "config/keystatic.config.ts" }), react()],
+    integrations: [solid(), mdx(), sitemap(), icon(), keystatic({ configPath: "./config/keystatic.config.ts" }), react()],
     vite: {
         plugins: [tailwindcss()],
     },
