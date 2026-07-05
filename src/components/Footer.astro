@@ -43,17 +43,22 @@ const sections = [
 			<div class="grid grid-cols-1 md:grid-cols-2 justify-items-center lg:grid-cols-3 gap-4 md:gap-12">
 				{
 					sections.map(section => (
-						<details class="w-full md:contents group">
-							<summary class="flex items-center justify-between cursor-pointer list-none md:cursor-default py-2 md:py-0 border-b border-zinc-100 md:border-none">
+						<div class="w-full flex flex-col">
+							<button
+								type="button"
+								class="flex w-full items-center justify-between py-2 border-b border-zinc-100 md:border-none md:cursor-default md:pointer-events-none"
+								data-footer-toggle
+							>
 								<span class="text-lg text-zinc-700 font-bold">{section.title}</span>
 								<svg
-									class="h-4 w-4 text-zinc-400 transition-transform group-open:rotate-180 md:hidden"
+									class="h-4 w-4 text-zinc-400 transition-transform md:hidden"
 									viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+									data-footer-chevron
 								>
 									<path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
 								</svg>
-							</summary>
-							<div class="flex flex-col gap-3 items-center md:items-start pt-3 md:pt-0">
+							</button>
+							<div class="flex flex-col gap-3 items-center md:items-start pt-3 md:pt-0" data-footer-content>
 								{section.items.map(({ title, url }) => (
 									<a
 										href={url}
@@ -63,7 +68,7 @@ const sections = [
 									</a>
 								))}
 							</div>
-						</details>
+						</div>
 					))
 				}
 			</div>
@@ -108,3 +113,22 @@ const sections = [
 		</div>
 	</Container>
 </footer>
+
+<script>
+	const isMobile = () => window.innerWidth < 768
+
+	document.querySelectorAll("[data-footer-content]").forEach(el => {
+		if (isMobile()) (el as HTMLElement).style.display = "none"
+	})
+
+	document.querySelectorAll("[data-footer-toggle]").forEach(btn => {
+		btn.addEventListener("click", () => {
+			if (!isMobile()) return
+			const content = btn.nextElementSibling as HTMLElement
+			const chevron = btn.querySelector("[data-footer-chevron]") as HTMLElement
+			const isOpen = content.style.display !== "none"
+			content.style.display = isOpen ? "none" : "flex"
+			chevron?.style.setProperty("transform", isOpen ? "" : "rotate(180deg)")
+		})
+	})
+</script>
