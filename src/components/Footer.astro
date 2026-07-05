@@ -114,19 +114,21 @@ const sections = [
 	</Container>
 </footer>
 
+<style is:global>
+	@media (max-width: 767px) {
+		[data-footer-content] {
+			display: none;
+		}
+	}
+</style>
+
 <script>
-	const isMobile = () => window.innerWidth < 768
-
-	document.querySelectorAll("[data-footer-content]").forEach(el => {
-		if (isMobile()) (el as HTMLElement).style.display = "none"
-	})
-
 	document.querySelectorAll("[data-footer-toggle]").forEach(btn => {
 		btn.addEventListener("click", () => {
-			if (!isMobile()) return
+			if (window.innerWidth >= 768) return
 			const content = btn.nextElementSibling as HTMLElement
 			const chevron = btn.querySelector("[data-footer-chevron]") as HTMLElement
-			const isOpen = content.style.display !== "none"
+			const isOpen = content.style.display === "flex"
 			content.style.display = isOpen ? "none" : "flex"
 			chevron?.style.setProperty("transform", isOpen ? "" : "rotate(180deg)")
 		})
