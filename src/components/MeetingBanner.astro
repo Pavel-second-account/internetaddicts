@@ -1,9 +1,5 @@
 ---
-// Shown only during active online meeting windows (MSK = UTC+3)
-// Schedule: Mon 10:00, Tue 12:00, Wed 12:00, Thu 10:00, Thu 20:00, Fri 09:00 — each ~60 min
-const ZOOM_LINK = "https://us06web.zoom.us/j/86283420410?pwd=WAEyY3dcElfcgFseI9Y7Y8qYNZyRG9.1"
-const CHAT_LINK = "https://t.me/aiz_meetings/9057"
-const DISMISS_KEY = "meeting_banner_dismissed_date"
+const DISMISS_PREFIX = "meeting_dismissed_"
 ---
 
 <div
@@ -13,22 +9,7 @@ const DISMISS_KEY = "meeting_banner_dismissed_date"
 	aria-live="polite"
 >
 	<div class="bg-[#0098EA] text-white px-4 py-3 flex items-center justify-between gap-4 flex-wrap shadow-[0_-2px_12px_rgba(0,0,0,0.15)]">
-		<p class="text-base font-medium leading-snug">
-			Сейчас идёт онлайн-собрание. Заходите —
-			<a
-				href={ZOOM_LINK}
-				target="_blank"
-				rel="noopener noreferrer"
-				class="underline underline-offset-2 font-semibold hover:opacity-80"
-			>Zoom</a>
-			&nbsp;|&nbsp;
-			<a
-				href={CHAT_LINK}
-				target="_blank"
-				rel="noopener noreferrer"
-				class="underline underline-offset-2 font-semibold hover:opacity-80"
-			>Чат</a>
-		</p>
+		<p id="meeting-banner-text" class="text-base font-medium leading-snug"></p>
 		<button
 			id="meeting-banner-close"
 			type="button"
@@ -38,14 +19,25 @@ const DISMISS_KEY = "meeting_banner_dismissed_date"
 	</div>
 </div>
 
-<script define:vars={{ DISMISS_KEY }}>
+<script define:vars={{ DISMISS_PREFIX }}>
+	const AIZ = {
+		zoom: "https://us06web.zoom.us/j/86283420410?pwd=WAEyY3dcElfcgFseI9Y7Y8qYNZyRG9.1",
+		chat: "https://t.me/aiz_meetings/9057",
+	}
+	const AKI = {
+		zoom: null,
+		chat: "https://t.me/cgaa_cis/8119",
+	}
+
 	const MEETINGS_MSK = [
-		{ day: 1, hour: 10, min: 0 },
-		{ day: 2, hour: 12, min: 0 },
-		{ day: 3, hour: 12, min: 0 },
-		{ day: 4, hour: 10, min: 0 },
-		{ day: 4, hour: 20, min: 0 },
-		{ day: 5, hour: 9,  min: 0 },
+		{ day: 0, hour: 20, min: 0, ...AKI },
+		{ day: 1, hour: 10, min: 0, ...AIZ },
+		{ day: 1, hour: 20, min: 0, ...AKI },
+		{ day: 2, hour: 12, min: 0, ...AIZ },
+		{ day: 3, hour: 12, min: 0, ...AIZ },
+		{ day: 4, hour: 10, min: 0, ...AIZ },
+		{ day: 4, hour: 20, min: 0, ...AIZ },
+		{ day: 5, hour: 9,  min: 0, ...AIZ },
 	]
 	const DURATION_MIN = 60
 
@@ -56,28 +48,36 @@ const DISMISS_KEY = "meeting_banner_dismissed_date"
 		return new Date(now.getTime() + (mskOffset - localOffset) * 60_000)
 	}
 
-	function isActiveMeeting() {
+	function getActiveMeeting() {
 		const msk = getMskDate()
 		const day = msk.getDay()
 		const minutes = msk.getHours() * 60 + msk.getMinutes()
-		return MEETINGS_MSK.some(({ day: d, hour, min }) => {
+		return MEETINGS_MSK.find(({ day: d, hour, min }) => {
 			const start = hour * 60 + min
 			return day === d && minutes >= start && minutes < start + DURATION_MIN
-		})
+		}) ?? null
 	}
 
-	function todayStr() {
+	function dismissKey(meeting) {
 		const msk = getMskDate()
-		return msk.toISOString().slice(0, 10) // "YYYY-MM-DD"
+		return `${DISMISS_PREFIX}${msk.toISOString().slice(0, 10)}_${meeting.day}_${meeting.hour}`
+	}
+
+	function mkLink(href, label) {
+		return `<a href="${href}" target="_blank" rel="noopener noreferrer" class="underline underline-offset-2 font-semibold hover:opacity-80">${label}</a>`
 	}
 
 	const banner = document.getElementById("meeting-banner")
+	const textEl = document.getElementById("meeting-banner-text")
 	const closeBtn = document.getElementById("meeting-banner-close")
+	const meeting = getActiveMeeting()
 
-	const dismissed = localStorage.getItem(DISMISS_KEY)
+	if (banner && textEl && meeting && !localStorage.getItem(dismissKey(meeting))) {
+		const parts = ["Сейчас идёт онлайн-собрание. Заходите —"]
+		if (meeting.zoom) parts.push(mkLink(meeting.zoom, "Zoom"))
+		parts.push(mkLink(meeting.chat, "Чат"))
+		textEl.innerHTML = parts.join(" ")
 
-	if (banner && isActiveMeeting() && dismissed !== todayStr()) {
-		// Slide up with slight delay so the CSS transition fires
 		requestAnimationFrame(() => {
 			requestAnimationFrame(() => {
 				banner.classList.remove("translate-y-full")
@@ -86,7 +86,7 @@ const DISMISS_KEY = "meeting_banner_dismissed_date"
 	}
 
 	closeBtn?.addEventListener("click", () => {
-		localStorage.setItem(DISMISS_KEY, todayStr())
+		if (meeting) localStorage.setItem(dismissKey(meeting), "1")
 		banner?.classList.add("translate-y-full")
 	})
 </script>
