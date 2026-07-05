@@ -40,22 +40,30 @@ const sections = [
 <footer class="py-6 bg-white">
 	<div class="py-8">
 		<Container class="max-w-6xl mx-auto">
-			<div
-				class="grid grid-cols-1 md:grid-cols-2 justify-items-center lg:grid-cols-3 gap-12"
-			>
+			<div class="grid grid-cols-1 md:grid-cols-2 justify-items-center lg:grid-cols-3 gap-4 md:gap-12">
 				{
 					sections.map(section => (
-						<div class="flex flex-col gap-3 items-center md:items-start">
-							<span class="text-lg text-zinc-700 font-bold">{section.title}</span>
-							{section.items.map(({ title, url }) => (
-								<a
-									href={url}
-									class="items-center flex gap-1 md:text-left text-center text-zinc-500"
+						<details class="w-full md:contents group">
+							<summary class="flex items-center justify-between cursor-pointer list-none md:cursor-default py-2 md:py-0 border-b border-zinc-100 md:border-none">
+								<span class="text-lg text-zinc-700 font-bold">{section.title}</span>
+								<svg
+									class="h-4 w-4 text-zinc-400 transition-transform group-open:rotate-180 md:hidden"
+									viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
 								>
-									<span>{title}</span>
-								</a>
-							))}
-						</div>
+									<path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+								</svg>
+							</summary>
+							<div class="flex flex-col gap-3 items-center md:items-start pt-3 md:pt-0">
+								{section.items.map(({ title, url }) => (
+									<a
+										href={url}
+										class="items-center flex gap-1 md:text-left text-center text-zinc-500"
+									>
+										<span>{title}</span>
+									</a>
+								))}
+							</div>
+						</details>
 					))
 				}
 			</div>
@@ -65,7 +73,10 @@ const sections = [
 	<Container
 		class="max-w-6xl sm:flex-row flex-col px-5 mx-auto flex items-center justify-between gap-2 md:gap-6 p-3"
 	>
-		<span>&copy; {new Date().getFullYear()} <b>internetaddicts.ru</b></span>
+		<div class="flex flex-col items-center sm:items-start gap-1">
+			<span>&copy; {new Date().getFullYear()} <b>internetaddicts.ru</b></span>
+			<a href="/privacy" class="font-bold text-zinc-700 hover:text-zinc-900 transition-colors">Политика конфиденциальности</a>
+		</div>
 		<div class="flex flex-col items-end gap-1 text-sm text-zinc-500">
 			<span class="text-xs text-zinc-400 uppercase tracking-wide font-medium">Разработчик</span>
 			<div class="flex flex-col items-end gap-0.5">
