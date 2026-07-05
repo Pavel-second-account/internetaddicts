@@ -1,0 +1,44 @@
+<div
+	id="cookie-banner"
+	class="fixed inset-0 z-[80] hidden items-center justify-center p-4"
+	role="dialog"
+	aria-modal="true"
+	aria-labelledby="cookie-banner-title"
+>
+	<div class="absolute inset-0 bg-black/45" />
+	<div class="relative z-10 w-full max-w-md rounded-2xl bg-white p-5 shadow-2xl ring-1 ring-black/10">
+		<div class="flex flex-col gap-4">
+			</h2>
+			<p class="text-[15px] leading-relaxed text-zinc-700">
+				Мы используем cookie и другие аналитические технологии на нашем веб-сайте
+			</p>
+		</div>
+		<div class="mt-5 flex justify-end">
+			<button
+				id="cookie-ok"
+				type="button"
+				class="rounded-full bg-[#0071e3] px-6 py-2 text-sm font-semibold text-white hover:bg-[#0066cc]"
+			>
+				ОК
+			</button>
+		</div>
+	</div>
+</div>
+
+<script>
+	const COOKIE_KEY = "aiz:cookie-consent"
+	const banner = document.getElementById("cookie-banner")
+
+	if (localStorage.getItem(COOKIE_KEY) !== "1") {
+		banner?.classList.remove("hidden")
+		banner?.classList.add("flex")
+		document.body.classList.add("overflow-hidden")
+	}
+
+	document.getElementById("cookie-ok")?.addEventListener("click", () => {
+		localStorage.setItem(COOKIE_KEY, "1")
+		banner?.classList.add("hidden")
+		banner?.classList.remove("flex")
+		document.body.classList.remove("overflow-hidden")
+	})
+</script>

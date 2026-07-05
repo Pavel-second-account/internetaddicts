@@ -6,6 +6,7 @@ import Links from "../components/Head/Links.astro"
 import Metrika from "../components/Head/Metrika.astro"
 import { feature_flags } from "../../config/feature.flags"
 import AnnouncementModal from "../components/AnnouncementModal.astro"
+import CookieBanner from "../components/CookieBanner.astro"
 import MeetingBanner from "../components/MeetingBanner.astro"
 import PwaPrompt from "../components/PwaPrompt.astro"
 import Verification from "../components/Head/Verification.astro"
@@ -71,6 +72,7 @@ const typeSiteFinal = typeSite ?? "website"
 			)
 		}
 		<Footer />
+		{feature_flags.metrika && <CookieBanner />}
 		<AnnouncementModal />
 		<MeetingBanner />
 		<PwaPrompt />
