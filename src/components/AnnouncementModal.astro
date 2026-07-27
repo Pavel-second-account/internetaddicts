@@ -23,7 +23,7 @@ if (active.length === 0) return
 				aria-label="Закрыть объявление"
 				data-announcement-close
 			/>
-			<div class="relative z-10 max-h-[min(90vh,640px)] w-full max-w-md overflow-y-auto rounded-2xl bg-white p-5 shadow-2xl ring-1 ring-black/10">
+			<div class="relative z-10 h-auto max-h-[calc(100vh-2rem)] w-full max-w-md overflow-y-auto rounded-2xl bg-white p-5 shadow-2xl ring-1 ring-black/10">
 				<button
 					type="button"
 					class="absolute right-3 top-3 rounded-lg px-2 py-1 text-2xl leading-none text-zinc-500 hover:bg-zinc-100 hover:text-zinc-800"
@@ -49,21 +49,25 @@ if (active.length === 0) return
 							>
 								{announcement.title}
 							</h2>
-							{announcement.lead && (
-								<p class="mt-2 text-[15px] leading-relaxed text-zinc-700">{announcement.lead}</p>
-							)}
+						</div>
+					</div>
+					{announcement.lead && (
+						<p class="w-full text-[15px] leading-relaxed text-zinc-700">{announcement.lead}</p>
+					)}
+					{(announcement.where || announcement.when) && (
+						<div class="w-full space-y-1.5 text-[15px] leading-relaxed text-zinc-700">
 							{announcement.where && (
-								<p class="mt-2 text-[15px] leading-relaxed text-zinc-700">
+								<p>
 									<span class="font-semibold text-zinc-900">Где:</span> {announcement.where}
 								</p>
 							)}
 							{announcement.when && (
-								<p class="mt-1.5 text-[15px] leading-relaxed text-zinc-700">
+								<p>
 									<span class="font-semibold text-zinc-900">Когда:</span> {announcement.when}
 								</p>
 							)}
 						</div>
-					</div>
+					)}
 					{announcement.bullets.length > 0 && (
 						<ul class="w-full space-y-1.5 text-[15px] text-zinc-700">
 							{announcement.bullets.map(item => (
