@@ -7,6 +7,7 @@ export const VK = "https://vk.com/aiz_itta"
 export const VK_VIDEO_SPEAKERS = "https://vkvideo.ru/@aiz_community"
 export const TIKTOK = "https://t.me/aiz_itta"
 export const YOUTUBE = "https://www.youtube.com/channel/UC6X1MOn_So7iD2JEHkN-YHQ"
+export const MAX = "https://max.ru/join/8qD3MYyzLWeM0zaujS4DGvWoFdvXRNwREJyATRA_yeA"
 
 export const COPYRIGHT = "Анонимные Интернет-Зависимые"
 export const RKO = "https://t.me/+WMn0QssSLHsyYzcy"
@@ -52,6 +53,14 @@ export const navigation = [
 		label: "Контакты",
 		target: "",
 		icon: "mdi:account-multiple-check",
+		style: "",
+	},
+	{
+		href: MAX,
+		label: "MAX",
+		target: "_blank",
+		icon: "",
+		image: "/favicons/max.webp",
 		style: "",
 	},
 	{

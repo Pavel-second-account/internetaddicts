@@ -58,9 +58,21 @@ import { Icon } from "astro-icon/components"
 					href={(link as { href: string }).href}
 					title={link.label}
 					target={(link as { target: string }).target}
+					rel={(link as { target: string }).target === "_blank" ? "noopener noreferrer" : undefined}
 					class={cn(className, link.style)}
 				>
 					{link.icon && <Icon name={link.icon as string} />}
+					{
+						"image" in link && link.image && (
+							<img
+								src={link.image}
+								alt=""
+								width="22"
+								height="22"
+								class="h-[1.35rem] w-[1.35rem] shrink-0 rounded-md"
+							/>
+						)
+					}
 					<span>{link.label}</span>
 					{"count" in link && link.count && <span class="">({link.count})</span>}
 				</a>
