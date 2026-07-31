@@ -1,5 +1,6 @@
 ---
 import Layout from "@/layout/Layout.astro"
+import { MAX } from "@/data/consts"
 import { Icon } from "astro-icon/components"
 ---
 
@@ -19,6 +20,15 @@ import { Icon } from "astro-icon/components"
 					class="underline underline-offset-4 text-blue-500 inline-flex gap-1 items-center"
 					><Icon name="mdi:telegram" /><span>общем чате для общения АИЗ.</span></a
 				> Мы с нетерпением ждем вашего сообщения.
+			</p>
+
+			<p class="text-xl leading-relaxed">
+				Объявления собраний также публикуются в <a
+					href={MAX}
+					target="_blank"
+					rel="noreferrer"
+					class="text-blue-500 underline underline-offset-4">Мах</a
+				>.
 			</p>
 
 			<h3 class="text-xl font-semibold mt-8">Наши друзья</h3>
