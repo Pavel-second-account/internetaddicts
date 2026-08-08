@@ -1,22 +1,55 @@
 ---
 import BookmarksCounter from "@/components/BookmarksCounter";
-import { navigation } from "@/data/consts";
+import { materialsNavigation, primaryNavigation } from "@/data/consts";
 import NavList from "./NavList.astro";
 import { Icon } from "astro-icon/components";
+
+const [literatureLink, ...otherMaterials] = materialsNavigation;
+const [homeLink, groupsLink, contactsLink, maxLink] = primaryNavigation;
 ---
 
-<nav class="hidden w-full md:flex gap-4 justify-between items-center">
-	<NavList
-		navigation={navigation}
-		className="text-zinc-700 flex items-center gap-1 transition-colors hover:text-zinc-600"
-	/>
-	<BookmarksCounter client:only="solid-js" />
-</nav>
+<div class="hidden w-full flex-col items-end gap-3 lg:flex">
+	<nav class="flex w-full flex-wrap items-center justify-between gap-x-5 gap-y-2">
+		<NavList
+			navigation={[homeLink]}
+			className="text-base text-zinc-700 flex items-center gap-1 transition-colors hover:text-zinc-600"
+		/>
+		<NavList
+			navigation={[groupsLink]}
+			className="text-base text-zinc-700 flex items-center gap-1 transition-colors hover:text-zinc-600"
+		/>
+		<div class="flex items-center gap-2">
+			<NavList
+				navigation={[contactsLink, maxLink]}
+				className="text-base text-zinc-700 flex items-center gap-1 transition-colors hover:text-zinc-600"
+			/>
+			<a
+				href="tel:+79675372037"
+				class="inline-flex items-center gap-1 whitespace-nowrap text-base font-semibold text-zinc-800 transition-colors hover:text-zinc-600"
+			>
+				<Icon name="mdi:phone" class="text-lg" aria-hidden="true" />
+				<span>+79675372037</span>
+			</a>
+		</div>
+	</nav>
+	<nav class="flex w-full flex-wrap items-center justify-between gap-2" aria-label="Материалы">
+		<span class="text-base font-semibold text-zinc-500">Материалы:</span>
+		<NavList
+			navigation={[literatureLink]}
+			className="text-base text-zinc-700 flex items-center gap-1 transition-colors hover:text-zinc-600"
+		/>
+		<BookmarksCounter client:only="solid-js" />
+		<NavList
+			navigation={otherMaterials}
+			className="text-base text-zinc-700 flex items-center gap-1 transition-colors hover:text-zinc-600"
+		/>
+	</nav>
+</div>
 
 <button
 	title="Мобильное меню"
 	id="menu-open"
-	class="text-white md:hidden gap-2 px-4 h-10 justify-center flex items-center bg-zinc-900 py-1.5 rounded-xl ring-1 ring-zinc-700"
+	class="text-white lg:hidden gap-2 px-4 h-10 justify-center flex items-center bg-zinc-900 py-1.5 rounded-xl ring-1 ring-zinc-700"
 	aria-controls="mobile-menu"
 	aria-expanded="false"
 >
@@ -25,7 +58,7 @@ import { Icon } from "astro-icon/components";
 	<span class="sr-only">Мобильное меню</span>
 </button>
 
-<div id="mobile-menu" class="fixed inset-0 z-50 hidden md:hidden" aria-hidden="true">
+<div id="mobile-menu" class="fixed inset-0 z-50 hidden lg:hidden" aria-hidden="true">
 	<div
 		id="mobile-menu-overlay"
 		class="absolute inset-0 bg-black/45 backdrop-blur-sm opacity-0 transition-opacity duration-300"
@@ -48,15 +81,39 @@ import { Icon } from "astro-icon/components";
 				<Icon name="mdi:close" class="text-xl" />
 			</button>
 		</div>
-		<div class="mt-4">
-			<BookmarksCounter mobile client:only="solid-js" />
-		</div>
 		<nav class="mt-4 flex flex-col gap-2">
 			<NavList
-				navigation={navigation}
+				navigation={[homeLink, groupsLink]}
 				className="flex gap-1 items-center rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-3 text-base font-medium text-zinc-800 hover:bg-zinc-100"
 			/>
+			<div class="flex divide-x divide-zinc-200 overflow-hidden rounded-xl border border-zinc-200 bg-zinc-50">
+				<NavList
+					navigation={[contactsLink, maxLink]}
+					className="flex flex-1 items-center gap-1 px-3 py-3 text-base font-medium text-zinc-800 hover:bg-zinc-100"
+				/>
+			</div>
+			<a
+				href="tel:+79675372037"
+				class="flex items-center gap-2 rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-3 text-base font-semibold text-zinc-800 hover:bg-zinc-100"
+			>
+				<Icon name="mdi:phone" class="text-xl" aria-hidden="true" />
+				<span>+79675372037</span>
+			</a>
 		</nav>
+		<div class="mt-6 border-t border-zinc-200 pt-4">
+			<p class="mb-3 text-sm font-semibold uppercase tracking-wide text-zinc-500">Материалы:</p>
+			<nav class="flex flex-col gap-2" aria-label="Материалы">
+				<NavList
+					navigation={[literatureLink]}
+					className="flex gap-1 items-center rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-3 text-base font-medium text-zinc-800 hover:bg-zinc-100"
+				/>
+				<BookmarksCounter mobile client:only="solid-js" />
+				<NavList
+					navigation={otherMaterials}
+					className="flex gap-1 items-center rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-3 text-base font-medium text-zinc-800 hover:bg-zinc-100"
+				/>
+			</nav>
+		</div>
 	</div>
 </div>
 

@@ -12,7 +12,7 @@ export const MAX = "https://max.ru/join/8qD3MYyzLWeM0zaujS4DGvWoFdvXRNwREJyATRA_
 export const COPYRIGHT = "Анонимные Интернет-Зависимые"
 export const RKO = "https://t.me/+WMn0QssSLHsyYzcy"
 
-export const navigation = [
+export const primaryNavigation = [
 	{
 		href: "/",
 		label: "Главная",
@@ -27,6 +27,24 @@ export const navigation = [
 		icon: "mdi:account-group",
 		style: "",
 	},
+	{
+		href: "/contacts",
+		label: "Контакты",
+		target: "",
+		icon: "mdi:account-multiple-check",
+		style: "",
+	},
+	{
+		href: MAX,
+		label: "MAX",
+		target: "_blank",
+		icon: "",
+		image: "/favicons/max.webp",
+		style: "",
+	},
+]
+
+export const materialsNavigation = [
 	{
 		href: "/posts",
 		label: "Литература",
@@ -46,21 +64,6 @@ export const navigation = [
 		label: "Ежедневник",
 		target: "",
 		icon: "mdi:account-card",
-		style: "",
-	},
-	{
-		href: "/contacts",
-		label: "Контакты",
-		target: "",
-		icon: "mdi:account-multiple-check",
-		style: "",
-	},
-	{
-		href: MAX,
-		label: "MAX",
-		target: "_blank",
-		icon: "",
-		image: "/favicons/max.webp",
 		style: "",
 	},
 	{

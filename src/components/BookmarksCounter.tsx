@@ -25,7 +25,7 @@ export default function BookmarksCounter(props: BookmarksCounterProps) {
 	return (
 		<a
 			href="/bookmarks"
-			class={`inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold transition ${
+			class={`inline-flex items-center gap-2 rounded-lg px-3 py-2 text-base font-semibold transition ${
 				props.mobile
 					? "w-full justify-between bg-stone-50 text-stone-800 ring-1 ring-stone-200 hover:bg-stone-100"
 					: "bg-stone-50 text-stone-800 ring-1 ring-stone-300 hover:bg-stone-100"
