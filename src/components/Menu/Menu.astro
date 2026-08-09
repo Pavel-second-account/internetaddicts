@@ -12,20 +12,20 @@ const [homeLink, groupsLink, contactsLink, maxLink] = primaryNavigation;
 	<nav class="flex w-full flex-wrap items-center justify-between gap-x-5 gap-y-2">
 		<NavList
 			navigation={[homeLink]}
-			className="text-base text-zinc-700 flex items-center gap-1 transition-colors hover:text-zinc-600"
+			className="text-lg text-zinc-700 flex items-center gap-1 transition-colors hover:text-zinc-600"
 		/>
 		<NavList
 			navigation={[groupsLink]}
-			className="text-base text-zinc-700 flex items-center gap-1 transition-colors hover:text-zinc-600"
+			className="text-lg text-zinc-700 flex items-center gap-1 transition-colors hover:text-zinc-600"
 		/>
 		<div class="flex items-center gap-2">
 			<NavList
 				navigation={[contactsLink, maxLink]}
-				className="text-base text-zinc-700 flex items-center gap-1 transition-colors hover:text-zinc-600"
+				className="text-lg text-zinc-700 flex items-center gap-1 transition-colors hover:text-zinc-600"
 			/>
 			<a
 				href="tel:+79675372037"
-				class="inline-flex items-center gap-1 whitespace-nowrap text-base font-semibold text-zinc-800 transition-colors hover:text-zinc-600"
+				class="inline-flex items-center gap-1 whitespace-nowrap text-lg font-semibold text-zinc-800 transition-colors hover:text-zinc-600"
 			>
 				<Icon name="mdi:phone" class="text-lg" aria-hidden="true" />
 				<span>+79675372037</span>
