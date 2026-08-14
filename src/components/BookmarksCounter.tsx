@@ -3,6 +3,7 @@ import { readBookmarks } from "@/lib/bookmarks"
 
 type BookmarksCounterProps = {
 	mobile?: boolean
+	active?: boolean
 }
 
 export default function BookmarksCounter(props: BookmarksCounterProps) {
@@ -25,12 +26,21 @@ export default function BookmarksCounter(props: BookmarksCounterProps) {
 	return (
 		<a
 			href="/bookmarks"
-			class={`inline-flex items-center gap-2 rounded-lg px-3 py-2 text-base font-semibold transition ${
+			class={`inline-flex items-center gap-2 text-base transition ${
 				props.mobile
-					? "w-full justify-between bg-stone-50 text-stone-800 ring-1 ring-stone-200 hover:bg-stone-100"
-					: "bg-stone-50 text-stone-800 ring-1 ring-stone-300 hover:bg-stone-100"
+					? `w-full justify-between rounded-xl border px-3 py-3 font-medium ${
+							props.active
+								? "border-stone-300 bg-stone-200 font-semibold text-stone-950"
+								: "border-zinc-200 bg-zinc-50 text-zinc-800 hover:bg-zinc-100"
+						}`
+					: `rounded-lg px-3 py-2 ${
+							props.active
+								? "bg-stone-50 font-semibold text-stone-900 ring-1 ring-stone-300"
+								: "text-zinc-700 hover:bg-zinc-100 hover:text-zinc-900"
+						}`
 			}`}
 			aria-label="Закладки"
+			aria-current={props.active ? "page" : undefined}
 		>
 			<span>Закладки</span>
 			<span class="rounded-full bg-stone-700 px-2 py-0.5 text-xs text-white">{count()}</span>

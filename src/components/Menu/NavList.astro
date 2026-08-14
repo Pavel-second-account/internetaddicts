@@ -1,7 +1,19 @@
 ---
-const { navigation, className = "" } = Astro.props
+const { navigation, className = "", activeClassName = "" } = Astro.props
 import { cn } from "@/utils/cn"
 import { Icon } from "astro-icon/components"
+
+const normalizePath = (path: string) => path === "/" ? path : path.replace(/\/+$/, "")
+const currentPath = normalizePath(Astro.url.pathname)
+
+const isActive = (href?: string) => {
+	if (!href?.startsWith("/")) return false
+
+	const linkPath = normalizePath(new URL(href, Astro.url).pathname)
+	return linkPath === "/"
+		? currentPath === "/"
+		: currentPath === linkPath || currentPath.startsWith(`${linkPath}/`)
+}
 ---
 
 {
@@ -18,7 +30,14 @@ import { Icon } from "astro-icon/components"
 					)}
 				>
 					{link.href ? (
-						<a href={link.href} class="inline-flex items-center gap-1 whitespace-nowrap text-sm font-medium no-underline">
+						<a
+							href={link.href}
+							class={cn(
+								"inline-flex items-center gap-1 whitespace-nowrap text-sm font-medium no-underline",
+								isActive(link.href) && activeClassName,
+							)}
+							aria-current={isActive(link.href) ? "page" : undefined}
+						>
 							{link.icon && <Icon name={link.icon} class="text-base" aria-hidden="true" />}
 							{link.label}
 						</a>
@@ -59,7 +78,12 @@ import { Icon } from "astro-icon/components"
 					title={link.label}
 					target={(link as { target: string }).target}
 					rel={(link as { target: string }).target === "_blank" ? "noopener noreferrer" : undefined}
-					class={cn(className, link.style)}
+					class={cn(
+						className,
+						link.style,
+						isActive((link as { href: string }).href) && activeClassName,
+					)}
+					aria-current={isActive((link as { href: string }).href) ? "page" : undefined}
 				>
 					{link.icon && <Icon name={link.icon as string} />}
 					{
