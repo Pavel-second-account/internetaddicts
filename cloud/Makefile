@@ -99,7 +99,7 @@ clean:
 
 # 2) Astro Node standalone (после bootstrap-site; nginx проксирует сюда)
 start:
-	$(SSH) sh -c "set -e; command -v pm2 >/dev/null || npm install -g pm2; pm2 delete $(PM2_APP_NAME) 2>/dev/null || true; cd '$(SITE_ROOT)' && NODE_ENV=production HOST=127.0.0.1 PORT=$(SERVE_PORT) pm2 start server/entry.mjs --name $(PM2_APP_NAME) --interpreter node; pm2 save"
+	$(SSH) sh -c "set -e; RUNTIME_ENV_FILE='$(REMOTE_DIR)/shared/site.env'; if [ -f \"\$$RUNTIME_ENV_FILE\" ]; then set -a; . \"\$$RUNTIME_ENV_FILE\"; set +a; fi; command -v pm2 >/dev/null || npm install -g pm2; pm2 delete $(PM2_APP_NAME) 2>/dev/null || true; cd '$(SITE_ROOT)' && NODE_ENV=production HOST=127.0.0.1 PORT=$(SERVE_PORT) pm2 start server/entry.mjs --name $(PM2_APP_NAME) --interpreter node; pm2 save"
 
 # 3) Остановка
 stop:

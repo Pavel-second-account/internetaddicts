@@ -20,13 +20,14 @@ export interface Props {
 	pubDate?: string
 	elemsTrue?: boolean
 	containerOff?: boolean
+	noIndex?: boolean
 }
 
 const LD_name = "internetaddicts.ru"
 
 const poster = BANNER
 
-const { title, desc, typeSite, pubDate, elemsTrue, containerOff, ...props } = Astro.props
+const { title, desc, typeSite, pubDate, elemsTrue, containerOff, noIndex, ...props } = Astro.props
 
 const typeSiteFinal = typeSite ?? "website"
 ---
@@ -43,7 +44,7 @@ const typeSiteFinal = typeSite ?? "website"
 			name="zen-verification"
 			content="OQ8ApO7KTuzwEXojx7xR84IGfEJ7GjwsEilJY5ifxnusqOWWg7hEDFFgB4nXEnqy"
 		/>
-		<meta name="robots" content="index, follow" />
+		<meta name="robots" content={noIndex ? "noindex, nofollow" : "index, follow"} />
 		<link rel="canonical" href={Astro.url} />
 
 		<Links />

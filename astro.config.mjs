@@ -12,6 +12,12 @@ import react from "@astrojs/react";
 
 export default defineConfig({
     site: "https://www.internetaddicts.ru/",
+	// Nginx terminates HTTPS, so Astro's built-in Origin comparison sees the
+	// internal URL and rejects legitimate form POSTs. Protected forms use a
+	// signed SameSite=Strict session cookie and Sec-Fetch-Site validation.
+	security: {
+		checkOrigin: false,
+	},
     prefetch: {
         defaultStrategy: "viewport",
     },

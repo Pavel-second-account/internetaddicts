@@ -1,0 +1,133 @@
+---
+import AccessForm from "@/components/group-statistics/AccessForm.astro"
+import StatisticsNav from "@/components/group-statistics/StatisticsNav.astro"
+import Layout from "@/layout/Layout.astro"
+import {
+	createSessionCookie,
+	hasValidSession,
+	isPasswordConfigured,
+	isSameOrigin,
+	passwordMatches,
+	sessionCookie,
+} from "@/lib/group-statistics/auth"
+import { listStoredStatistics } from "@/lib/group-statistics/storage"
+import { syncPendingGoogleStatistics } from "@/lib/group-statistics/sync"
+import type { GroupStatisticRecord } from "@/lib/group-statistics/records"
+
+export const prerender = false
+
+let authenticated = hasValidSession(Astro.cookies.get(sessionCookie.name)?.value)
+let loginError = ""
+
+if (!isPasswordConfigured()) {
+	Astro.response.status = 503
+	loginError = "Доступ ещё не настроен администратором сайта."
+} else if (Astro.request.method === "POST") {
+	if (!isSameOrigin(Astro.request, Astro.url)) {
+		Astro.response.status = 403
+		loginError = "Запрос отклонён. Обновите страницу и попробуйте снова."
+	} else {
+		const form = await Astro.request.formData()
+		if (
+			String(form.get("action") ?? "") === "login" &&
+			passwordMatches(String(form.get("password") ?? ""))
+		) {
+			Astro.cookies.set(sessionCookie.name, createSessionCookie(), {
+				httpOnly: true,
+				secure: Astro.url.protocol === "https:",
+				sameSite: "strict",
+				path: "/group-statistics",
+				maxAge: sessionCookie.maxAge,
+			})
+			return Astro.redirect("/group-statistics", 303)
+		}
+		Astro.response.status = 401
+		loginError = "Неверный пароль."
+	}
+}
+
+authenticated = authenticated || hasValidSession(Astro.cookies.get(sessionCookie.name)?.value)
+let records: GroupStatisticRecord[] = []
+let loadError = ""
+let syncWarning = ""
+if (authenticated) {
+	try {
+		await syncPendingGoogleStatistics()
+	} catch (error) {
+		console.error("Failed to sync pending group statistics with Google", error)
+		syncWarning = "Некоторые записи ещё не синхронизированы с Google. Повторим автоматически."
+	}
+	try {
+		records = (await listStoredStatistics()).reverse()
+	} catch (error) {
+		console.error("Failed to read stored group statistics", error)
+		Astro.response.status = 502
+		loadError = "Не удалось загрузить записи. Попробуйте обновить страницу позже."
+	}
+}
+---
+
+<Layout noIndex title="Статистика групп" desc="Внесённая статистика собраний АИЗ">
+	{
+		authenticated ? (
+			<section class="mx-auto flex w-full max-w-6xl flex-col gap-6">
+				<StatisticsNav current="records" />
+				<header class="flex flex-wrap items-end justify-between gap-4">
+					<div>
+						<h1 class="text-3xl font-bold text-zinc-800">Внесённые записи</h1>
+						<p class="mt-2 text-zinc-600">Всего записей: {records.length}</p>
+					</div>
+					<a
+						href="/group-statistics/export.tsv"
+						download
+						class="rounded-lg bg-blue-600 px-4 py-2.5 font-semibold !text-white hover:bg-blue-700"
+					>
+						Скачать TSV
+					</a>
+				</header>
+				{syncWarning && (
+					<p role="status" class="rounded-lg bg-amber-50 p-4 text-amber-900">
+						{syncWarning}
+					</p>
+				)}
+
+				{loadError ? (
+					<p role="alert" class="rounded-lg bg-red-50 p-4 text-red-800">
+						{loadError}
+					</p>
+				) : records.length === 0 ? (
+					<p class="rounded-lg bg-zinc-50 p-5 text-zinc-600">Записей пока нет.</p>
+				) : (
+					<div class="overflow-x-auto rounded-xl border border-zinc-200">
+						<table class="min-w-full border-collapse text-left text-sm">
+							<thead class="bg-zinc-100 text-zinc-700">
+								<tr>
+									<th scope="col" class="px-4 py-3 font-semibold">Название группы</th>
+									<th scope="col" class="whitespace-nowrap px-4 py-3 font-semibold">Дата</th>
+									<th scope="col" class="px-4 py-3 text-right font-semibold">Участников</th>
+									<th scope="col" class="px-4 py-3 text-right font-semibold">Новичков</th>
+									<th scope="col" class="px-4 py-3 font-semibold">User</th>
+									<th scope="col" class="whitespace-nowrap px-4 py-3 font-semibold">Внесено</th>
+								</tr>
+							</thead>
+							<tbody class="divide-y divide-zinc-200 bg-white text-zinc-800">
+								{records.map(record => (
+									<tr class="hover:bg-zinc-50">
+										<td class="px-4 py-3 font-medium">{record.groupName}</td>
+										<td class="whitespace-nowrap px-4 py-3">{record.date}</td>
+										<td class="px-4 py-3 text-right tabular-nums">{record.participantCount}</td>
+										<td class="px-4 py-3 text-right tabular-nums">{record.newcomerCount}</td>
+										<td class="px-4 py-3">{record.user}</td>
+										<td class="whitespace-nowrap px-4 py-3">{record.timestamp}</td>
+									</tr>
+								))}
+							</tbody>
+						</table>
+					</div>
+				)}
+			</section>
+		) : (
+			<AccessForm error={loginError} returnTo="/group-statistics" />
+		)
+	}
+</Layout>

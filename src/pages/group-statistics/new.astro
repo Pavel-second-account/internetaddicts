@@ -1,0 +1,236 @@
+---
+import AccessForm from "@/components/group-statistics/AccessForm.astro"
+import StatisticsNav from "@/components/group-statistics/StatisticsNav.astro"
+import Layout from "@/layout/Layout.astro"
+import {
+	createSessionCookie,
+	hasValidSession,
+	isPasswordConfigured,
+	isSameOrigin,
+	passwordMatches,
+	sessionCookie,
+} from "@/lib/group-statistics/auth"
+import { inputFromForm, validateRecord, type RecordInput } from "@/lib/group-statistics/records"
+import { appendStoredStatistic } from "@/lib/group-statistics/storage"
+import { syncPendingGoogleStatistics } from "@/lib/group-statistics/sync"
+import { getCollection } from "astro:content"
+
+export const prerender = false
+
+const groups = await getCollection("groups")
+const dayOrder: Record<string, number> = {
+	Понедельник: 1,
+	Вторник: 2,
+	Среда: 3,
+	Четверг: 4,
+	Пятница: 5,
+	Суббота: 6,
+	Воскресенье: 7,
+}
+const groupMeetings = groups
+	.map(group => ({
+		name: `${group.data.title.trim()} — ${group.data.when}${group.data.dateTime ? `, ${group.data.dateTime}` : ""}`,
+		day: group.data.when,
+		time: group.data.dateTime ?? "",
+	}))
+	.sort(
+		(a, b) =>
+			(dayOrder[a.day] ?? 99) - (dayOrder[b.day] ?? 99) ||
+			a.time.localeCompare(b.time, "ru") ||
+			a.name.localeCompare(b.name, "ru"),
+	)
+const groupNames = groupMeetings.map(meeting => meeting.name)
+const today = new Intl.DateTimeFormat("sv-SE", {
+	timeZone: "Europe/Moscow",
+	year: "numeric",
+	month: "2-digit",
+	day: "2-digit",
+}).format(new Date())
+
+let authenticated = hasValidSession(Astro.cookies.get(sessionCookie.name)?.value)
+let loginError = ""
+let saveError = ""
+let values: RecordInput = {
+	groupName: "",
+	date: today,
+	participantCount: "",
+	newcomerCount: "0",
+	user: "",
+}
+
+if (!isPasswordConfigured()) {
+	Astro.response.status = 503
+	loginError = "Доступ ещё не настроен администратором сайта."
+} else if (Astro.request.method === "POST") {
+	if (!isSameOrigin(Astro.request, Astro.url)) {
+		Astro.response.status = 403
+		loginError = "Запрос отклонён. Обновите страницу и попробуйте снова."
+	} else {
+		const form = await Astro.request.formData()
+		const action = String(form.get("action") ?? "")
+
+		if (action === "login") {
+			if (passwordMatches(String(form.get("password") ?? ""))) {
+				Astro.cookies.set(sessionCookie.name, createSessionCookie(), {
+				httpOnly: true,
+				secure: Astro.url.protocol === "https:",
+				sameSite: "strict",
+				path: "/group-statistics",
+				maxAge: sessionCookie.maxAge,
+			})
+			return Astro.redirect("/group-statistics/new", 303)
+			}
+			Astro.response.status = 401
+			loginError = "Неверный пароль."
+		} else if (!authenticated) {
+			Astro.response.status = 401
+			loginError = "Сессия завершилась. Введите пароль ещё раз."
+		} else if (action === "create") {
+			values = inputFromForm(form)
+			const validation = validateRecord(values)
+			if (!groupNames.includes(values.groupName)) {
+				validation.errors.push("Выберите группу из списка действующих групп.")
+			}
+			if (validation.errors.length || !validation.value) {
+				Astro.response.status = 400
+				saveError = validation.errors.join(" ")
+			} else {
+				try {
+					await appendStoredStatistic(validation.value)
+				} catch (error) {
+					console.error("Failed to store group statistic", error)
+					Astro.response.status = 502
+					saveError =
+						"Не удалось сохранить запись. Данные оставлены в форме — попробуйте ещё раз."
+				}
+
+				if (!saveError) {
+					try {
+						await syncPendingGoogleStatistics()
+						return Astro.redirect("/group-statistics/new?saved=both", 303)
+					} catch (error) {
+						console.error("Failed to sync group statistics with Google", error)
+						return Astro.redirect("/group-statistics/new?saved=local", 303)
+					}
+				}
+			}
+		}
+	}
+}
+
+authenticated = authenticated || hasValidSession(Astro.cookies.get(sessionCookie.name)?.value)
+const saved = Astro.url.searchParams.get("saved")
+---
+
+<Layout noIndex title="Новая статистика группы" desc="Внесение статистики собраний АИЗ">
+	{
+		authenticated ? (
+			<section class="mx-auto flex w-full max-w-3xl flex-col gap-6">
+				<StatisticsNav current="new" />
+				<header>
+					<h1 class="text-3xl font-bold text-zinc-800">Новая запись</h1>
+					<p class="mt-2 text-zinc-600">Внесите статистику после завершения собрания.</p>
+				</header>
+
+				{saved === "both" && (
+					<p role="status" class="rounded-lg bg-green-50 p-4 text-green-800">
+						Запись сохранена на сайте и в Google-таблице.
+					</p>
+				)}
+				{saved === "local" && (
+					<p role="status" class="rounded-lg bg-amber-50 p-4 text-amber-900">
+						Запись сохранена на сайте. Синхронизация с Google будет повторена автоматически —
+						 повторно отправлять форму не нужно.
+					</p>
+				)}
+				{saveError && (
+					<p role="alert" class="rounded-lg bg-red-50 p-4 text-red-800">
+						{saveError}
+					</p>
+				)}
+
+				<form method="post" class="grid gap-5 rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
+					<input type="hidden" name="action" value="create" />
+					<label class="grid gap-2 font-medium text-zinc-800">
+						Конкретное собрание
+						<select
+							name="groupName"
+							required
+							class="rounded-lg border border-zinc-300 px-3 py-2.5 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+						>
+							<option value="">Выберите группу</option>
+							{groupMeetings.map(meeting => <option value={meeting.name} selected={values.groupName === meeting.name}>{meeting.name}</option>)}
+						</select>
+						<span class="text-sm font-normal text-zinc-500">
+							Название, день недели и время берутся из раздела «Группы».
+						</span>
+					</label>
+
+					<div class="grid gap-5 sm:grid-cols-3">
+						<label class="grid gap-2 font-medium text-zinc-800">
+							Дата
+							<input
+								type="date"
+								name="date"
+								value={values.date}
+								required
+								class="rounded-lg border border-zinc-300 px-3 py-2.5 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+							/>
+						</label>
+						<label class="grid gap-2 font-medium text-zinc-800">
+							Участников
+							<input
+								type="number"
+								name="participantCount"
+								value={values.participantCount}
+								min="0"
+								max="10000"
+								step="1"
+								required
+								inputmode="numeric"
+								class="rounded-lg border border-zinc-300 px-3 py-2.5 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+							/>
+						</label>
+						<label class="grid gap-2 font-medium text-zinc-800">
+							Новичков
+							<input
+								type="number"
+								name="newcomerCount"
+								value={values.newcomerCount}
+								min="0"
+								max="10000"
+								step="1"
+								required
+								inputmode="numeric"
+								class="rounded-lg border border-zinc-300 px-3 py-2.5 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+							/>
+						</label>
+					</div>
+
+					<label class="grid gap-2 font-medium text-zinc-800">
+						Кто вносит данные
+						<input
+							type="text"
+							name="user"
+							value={values.user}
+							required
+							maxlength="80"
+							autocomplete="name"
+							placeholder="Имя или username"
+							class="rounded-lg border border-zinc-300 px-3 py-2.5 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+						/>
+					</label>
+
+					<button
+						type="submit"
+						class="mt-2 rounded-lg bg-blue-600 px-5 py-3 font-semibold !text-white hover:bg-blue-700"
+					>
+						Сохранить
+					</button>
+				</form>
+			</section>
+		) : (
+			<AccessForm error={loginError} returnTo="/group-statistics/new" />
+		)
+	}
+</Layout>

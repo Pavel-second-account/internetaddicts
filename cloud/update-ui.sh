@@ -11,6 +11,14 @@ DOWNLOAD_URL="${DOWNLOAD_URL:?set DOWNLOAD_URL}"
 EXPECTED_SHA256="${EXPECTED_SHA256:-}"
 PM2_APP_NAME="${PM2_APP_NAME:-internetaddicts-site}"
 SERVE_PORT="${SERVE_PORT:-4321}"
+RUNTIME_ENV_FILE="${RUNTIME_ENV_FILE:-${REMOTE_DIR}/shared/site.env}"
+
+if [[ -f "$RUNTIME_ENV_FILE" ]]; then
+	set -a
+	# shellcheck disable=SC1090
+	source "$RUNTIME_ENV_FILE"
+	set +a
+fi
 
 SITE_ROOT="${REMOTE_DIR}/current"
 TMP_ZIP="$(mktemp /tmp/astro-dist-XXXXXX.zip)"
@@ -83,7 +91,7 @@ if [[ -f "$TMP_UNZIP/package-lock.json" ]]; then
 fi
 
 if pm2 describe "$PM2_APP_NAME" >/dev/null 2>&1; then
-	pm2 restart "$PM2_APP_NAME" >/dev/null
+	pm2 restart "$PM2_APP_NAME" --update-env >/dev/null
 else
 	cd "$SITE_ROOT"
 	NODE_ENV=production HOST=127.0.0.1 PORT="$SERVE_PORT" pm2 start server/entry.mjs --name "$PM2_APP_NAME" --interpreter node >/dev/null

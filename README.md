@@ -34,3 +34,50 @@ make https CERTBOT_EMAIL=... CERTBOT_SECONDARY=www.internetaddicts.ru
 ```
 make update-ui
 ```
+
+## Закрытая форма статистики групп
+
+В сайте есть две серверные страницы, обе защищены общим паролем:
+
+- `/group-statistics/new` — добавление записи во внутреннее хранилище сайта;
+- `/group-statistics` — просмотр ранее внесённых строк (новые сверху).
+- `/group-statistics/export.tsv` — защищённая выгрузка всех строк в TSV.
+
+Ожидаемые колонки таблицы: `Название группы`, `Дата`, `Количество участников`,
+`Количество новичков`, `User`, `Timestamp`. Время записи формируется сервером по Москве.
+
+Записи хранятся в `/opt/internetaddicts/shared/group-statistics.json`. Каталог `shared`
+находится вне текущего релиза, поэтому обновления сайта не удаляют статистику. Запись
+выполняется атомарно, а файл доступен только пользователю сервера. Каждая новая запись
+также синхронизируется с Google-таблицей. При временной ошибке Google локальная запись не
+теряется и отправляется повторно при следующем сохранении или открытии списка. Техническая
+колонка `Record ID` предотвращает дубликаты при повторной синхронизации.
+
+Конкретное собрание выбирается только из раздела `/groups`. В сохраняемое название входят
+название группы, день недели и время, поэтому одноимённые собрания не объединяются.
+
+Секреты не добавляются в git или клиентский JavaScript. На VPS создайте постоянный каталог,
+который не удаляется при деплое:
+
+```bash
+mkdir -p /opt/internetaddicts/shared
+chmod 700 /opt/internetaddicts/shared
+cp google-service-account.json /opt/internetaddicts/shared/google-service-account.json
+chmod 600 /opt/internetaddicts/shared/google-service-account.json
+openssl rand -hex 32
+```
+
+Затем создайте `/opt/internetaddicts/shared/site.env` с правами `600`:
+
+```dotenv
+AIZ_STATS_PASSWORD='длинный-отдельный-пароль'
+AIZ_STATS_SESSION_SECRET='результат-openssl-rand-hex-32'
+AIZ_STATS_DATA_FILE='/opt/internetaddicts/shared/group-statistics.json'
+GOOGLE_SERVICE_ACCOUNT_FILE='/opt/internetaddicts/shared/google-service-account.json'
+AIZ_STATS_SPREADSHEET_ID='1qaSmvkymqUMT_Y-VwbSdDFEi0hDGVcxkU67AE_lLoR4'
+AIZ_STATS_SHEET_RANGE='Лист1!A:G'
+```
+
+После первого создания или изменения `site.env` перезапустите сайт через `make start`.
+Обычные последующие деплои сами загружают этот файл и обновляют окружение PM2. Пример
+локальных переменных находится в `.env.example`.
