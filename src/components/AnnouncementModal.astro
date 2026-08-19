@@ -16,6 +16,7 @@ if (active.length === 0) return
 			aria-labelledby={`announcement-title-${announcement.id}`}
 			data-announcement-modal
 			data-announcement-id={announcement.id}
+			data-announcement-active-until={announcement.activeUntil}
 		>
 			<button
 				type="button"
@@ -125,6 +126,8 @@ if (active.length === 0) return
 
 	for (const modal of modals) {
 		const id = modal.dataset.announcementId
+		const activeUntil = modal.dataset.announcementActiveUntil
+		if (activeUntil && new Date() > new Date(`${activeUntil}T23:59:59`)) continue
 		if (!id || localStorage.getItem(dismissKey(id)) === "1") continue
 		openModal(modal)
 		modal.querySelectorAll("[data-announcement-close]").forEach(btn => {
