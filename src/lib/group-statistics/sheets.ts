@@ -15,9 +15,10 @@ interface TokenCache {
 }
 
 const DEFAULT_SPREADSHEET_ID = "1qaSmvkymqUMT_Y-VwbSdDFEi0hDGVcxkU67AE_lLoR4"
-const DEFAULT_RANGE = "Лист1!A:G"
+const DEFAULT_RANGE = "Лист1!A:H"
 const GOOGLE_SCOPE = "https://www.googleapis.com/auth/spreadsheets"
-const GOOGLE_HEADERS = [...STATISTICS_HEADERS, "Record ID"]
+// Keep Record ID in column G so existing rows and deduplication remain compatible.
+const GOOGLE_HEADERS = [...STATISTICS_HEADERS.slice(0, 6), "Record ID", STATISTICS_HEADERS[6]]
 let tokenCache: TokenCache | undefined
 
 function base64url(value: string): string {
@@ -96,12 +97,15 @@ async function accessToken(): Promise<string> {
 }
 
 function config(): { spreadsheetId: string; range: string; sheetPrefix: string } {
-	const range = process.env.AIZ_STATS_SHEET_RANGE?.trim() || DEFAULT_RANGE
-	const separatorIndex = range.indexOf("!")
+	const configuredRange = process.env.AIZ_STATS_SHEET_RANGE?.trim() || DEFAULT_RANGE
+	const separatorIndex = configuredRange.indexOf("!")
+	const sheetPrefix = separatorIndex >= 0 ? `${configuredRange.slice(0, separatorIndex)}!` : ""
 	return {
 		spreadsheetId: process.env.AIZ_STATS_SPREADSHEET_ID?.trim() || DEFAULT_SPREADSHEET_ID,
-		range,
-		sheetPrefix: separatorIndex >= 0 ? `${range.slice(0, separatorIndex)}!` : "",
+		// Eight values are now stored. Derive the range from the configured sheet name
+		// so installations that still have the former A:G setting keep working.
+		range: `${sheetPrefix}A:H`,
+		sheetPrefix,
 	}
 }
 
@@ -146,13 +150,18 @@ async function updateValues(range: string, values: Array<Array<string | number>>
 
 async function ensureHeaders(): Promise<void> {
 	const { sheetPrefix } = config()
-	const headerRange = `${sheetPrefix}A1:G1`
+	const headerRange = `${sheetPrefix}A1:H1`
 	const rows = await getValues(headerRange)
 	const current = rows[0] ?? []
 	if (current.length === 0 || current.every(value => String(value ?? "").trim() === "")) {
 		await updateValues(headerRange, [GOOGLE_HEADERS])
-	} else if (!String(current[6] ?? "").trim()) {
-		await updateValues(`${sheetPrefix}G1`, [["Record ID"]])
+	} else {
+		if (!String(current[6] ?? "").trim()) {
+			await updateValues(`${sheetPrefix}G1`, [["Record ID"]])
+		}
+		if (!String(current[7] ?? "").trim()) {
+			await updateValues(`${sheetPrefix}H1`, [[STATISTICS_HEADERS[6]]])
+		}
 	}
 }
 
@@ -171,7 +180,7 @@ export async function appendGroupStatisticToGoogle(record: StoredGroupStatistic)
 		method: "POST",
 		body: JSON.stringify({
 			majorDimension: "ROWS",
-			values: [[...recordToRow(record), record.id]],
+			values: [[...recordToRow(record).slice(0, 6), record.id, record.additionalInfo]],
 		}),
 	})
 }

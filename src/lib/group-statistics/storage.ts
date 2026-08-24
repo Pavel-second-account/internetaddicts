@@ -41,7 +41,11 @@ async function readRecords(path = dataFilePath()): Promise<StoredGroupStatistic[
 		if (!Array.isArray(parsed) || !parsed.every(isRecord)) {
 			throw new Error("Файл статистики имеет неверный формат.")
 		}
-		return parsed
+		return parsed.map(record => ({
+			...record,
+			// Records created before this field was introduced remain valid.
+			additionalInfo: typeof record.additionalInfo === "string" ? record.additionalInfo : "",
+		}))
 	} catch (error) {
 		if ((error as NodeJS.ErrnoException).code === "ENOENT") return []
 		throw error

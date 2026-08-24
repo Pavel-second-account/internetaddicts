@@ -5,6 +5,7 @@ export const STATISTICS_HEADERS = [
 	"Количество новичков",
 	"User",
 	"Timestamp",
+	"Дополнительная информация",
 ] as const
 
 export interface GroupStatisticRecord {
@@ -14,6 +15,7 @@ export interface GroupStatisticRecord {
 	newcomerCount: number
 	user: string
 	timestamp: string
+	additionalInfo: string
 }
 
 export interface RecordInput {
@@ -22,6 +24,7 @@ export interface RecordInput {
 	participantCount: string
 	newcomerCount: string
 	user: string
+	additionalInfo: string
 }
 
 export interface ValidationResult {
@@ -31,6 +34,7 @@ export interface ValidationResult {
 
 const MAX_GROUP_NAME_LENGTH = 120
 const MAX_USER_LENGTH = 80
+export const MAX_ADDITIONAL_INFO_LENGTH = 2_000
 const MAX_COUNT = 10_000
 
 export function inputFromForm(form: FormData): RecordInput {
@@ -40,6 +44,7 @@ export function inputFromForm(form: FormData): RecordInput {
 		participantCount: String(form.get("participantCount") ?? "").trim(),
 		newcomerCount: String(form.get("newcomerCount") ?? "").trim(),
 		user: String(form.get("user") ?? "").trim(),
+		additionalInfo: String(form.get("additionalInfo") ?? "").trim(),
 	}
 }
 
@@ -109,6 +114,11 @@ export function validateRecord(input: RecordInput, now = new Date()): Validation
 	if (!input.user || input.user.length > MAX_USER_LENGTH) {
 		errors.push(`Имя ответственного обязательно и должно быть не длиннее ${MAX_USER_LENGTH} символов.`)
 	}
+	if (input.additionalInfo.length > MAX_ADDITIONAL_INFO_LENGTH) {
+		errors.push(
+			`Дополнительная информация должна быть не длиннее ${MAX_ADDITIONAL_INFO_LENGTH} символов.`,
+		)
+	}
 
 	if (errors.length || !date || participantCount === null || newcomerCount === null) {
 		return { errors }
@@ -123,6 +133,7 @@ export function validateRecord(input: RecordInput, now = new Date()): Validation
 			newcomerCount,
 			user: input.user,
 			timestamp: moscowTimestamp(now),
+			additionalInfo: input.additionalInfo,
 		},
 	}
 }
@@ -135,6 +146,7 @@ export function recordToRow(record: GroupStatisticRecord): Array<string | number
 		record.newcomerCount,
 		record.user,
 		record.timestamp,
+		record.additionalInfo,
 	]
 }
 
@@ -152,5 +164,6 @@ export function rowsToRecords(rows: unknown[][]): GroupStatisticRecord[] {
 			newcomerCount: Number(row[3] ?? 0),
 			user: String(row[4] ?? ""),
 			timestamp: String(row[5] ?? ""),
+			additionalInfo: String(row[6] ?? ""),
 		}))
 }

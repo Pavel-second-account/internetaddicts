@@ -44,7 +44,9 @@ make update-ui
 - `/group-statistics/export.tsv` — защищённая выгрузка всех строк в TSV.
 
 Ожидаемые колонки таблицы: `Название группы`, `Дата`, `Количество участников`,
-`Количество новичков`, `User`, `Timestamp`. Время записи формируется сервером по Москве.
+`Количество новичков`, `User`, `Timestamp`, `Дополнительная информация`. Время записи
+формируется сервером по Москве. Дополнительная информация заполняется ведущим при
+необходимости и может содержать до 2000 символов.
 
 Записи хранятся в `/opt/internetaddicts/shared/group-statistics.json`. Каталог `shared`
 находится вне текущего релиза, поэтому обновления сайта не удаляют статистику. Запись
@@ -75,7 +77,7 @@ AIZ_STATS_SESSION_SECRET='результат-openssl-rand-hex-32'
 AIZ_STATS_DATA_FILE='/opt/internetaddicts/shared/group-statistics.json'
 GOOGLE_SERVICE_ACCOUNT_FILE='/opt/internetaddicts/shared/google-service-account.json'
 AIZ_STATS_SPREADSHEET_ID='1qaSmvkymqUMT_Y-VwbSdDFEi0hDGVcxkU67AE_lLoR4'
-AIZ_STATS_SHEET_RANGE='Лист1!A:G'
+AIZ_STATS_SHEET_RANGE='Лист1!A:H'
 ```
 
 После первого создания или изменения `site.env` перезапустите сайт через `make start`.
