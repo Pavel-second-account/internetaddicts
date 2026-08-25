@@ -1,17 +1,21 @@
+import type { StatisticsDataset } from "./datasets"
 import { appendGroupStatisticToGoogle } from "./sheets"
 import { listPendingGoogleStatistics, markGoogleStatisticSynced } from "./storage"
 
-let syncQueue: Promise<void> = Promise.resolve()
+const syncQueues = new Map<string, Promise<void>>()
 
-export async function syncPendingGoogleStatistics(): Promise<void> {
-	const operation = syncQueue.then(async () => {
-		const pending = await listPendingGoogleStatistics()
+export async function syncPendingGoogleStatistics(dataset: StatisticsDataset): Promise<void> {
+	if (!dataset.syncsWithGoogle) return
+
+	const previous = syncQueues.get(dataset.id) ?? Promise.resolve()
+	const operation = previous.then(async () => {
+		const pending = await listPendingGoogleStatistics(dataset)
 		for (const record of pending) {
 			await appendGroupStatisticToGoogle(record)
-			await markGoogleStatisticSynced(record.id!)
+			await markGoogleStatisticSynced(dataset, record.id!)
 		}
 	})
 
-	syncQueue = operation.catch(() => undefined)
+	syncQueues.set(dataset.id, operation.catch(() => undefined))
 	return operation
 }

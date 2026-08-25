@@ -1,0 +1,163 @@
+---
+import AccessForm from "@/components/group-statistics/AccessForm.astro"
+import StatisticsNav from "@/components/group-statistics/StatisticsNav.astro"
+import type { StatisticsDataset } from "@/lib/group-statistics/datasets"
+import type { RecordsPageState } from "@/lib/group-statistics/pageActions"
+
+interface Props {
+	dataset: StatisticsDataset
+	state: RecordsPageState
+}
+
+const { dataset, state } = Astro.props
+const controlClass =
+	"rounded-lg border border-zinc-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+---
+
+{
+	state.authenticated ? (
+		<section class="mx-auto flex w-full max-w-6xl flex-col gap-6">
+			<StatisticsNav current="records" basePath={dataset.basePath} />
+			<header class="flex flex-wrap items-end justify-between gap-4">
+				<div>
+					<h1 class="text-3xl font-bold text-zinc-800">Внесённые записи</h1>
+					<p class="mt-2 text-zinc-600">
+						Показано <span data-stats-shown>{state.records.length}</span> из {state.records.length}
+					</p>
+				</div>
+				<a
+					href={`${dataset.basePath}/export.tsv`}
+					download
+					class="rounded-lg bg-blue-600 px-4 py-2.5 font-semibold !text-white hover:bg-blue-700"
+				>
+					Скачать TSV
+				</a>
+			</header>
+			{state.syncWarning && (
+				<p role="status" class="rounded-lg bg-amber-50 p-4 text-amber-900">
+					{state.syncWarning}
+				</p>
+			)}
+
+			{state.loadError ? (
+				<p role="alert" class="rounded-lg bg-red-50 p-4 text-red-800">
+					{state.loadError}
+				</p>
+			) : state.records.length === 0 ? (
+				<p class="rounded-lg bg-zinc-50 p-5 text-zinc-600">Записей пока нет.</p>
+			) : (
+				<div data-stats-table class="flex flex-col gap-4">
+					<div class="grid gap-4 rounded-xl border border-zinc-200 bg-zinc-50 p-4 sm:grid-cols-3">
+						<label class="grid gap-2 text-sm font-medium text-zinc-800">
+							Сортировка по дате
+							<select data-stats-sort class={controlClass}>
+								<option value="desc">Сначала новые</option>
+								<option value="asc">Сначала старые</option>
+							</select>
+						</label>
+						<label class="grid gap-2 text-sm font-medium text-zinc-800">
+							Формат
+							<select data-stats-format class={controlClass}>
+								<option value="all">Все</option>
+								<option value="online">Онлайн</option>
+								<option value="offline">Офлайн</option>
+							</select>
+						</label>
+						<label class="grid gap-2 text-sm font-medium text-zinc-800">
+							Группа
+							<select data-stats-group class={controlClass}>
+								<option value="all">Все группы</option>
+								{state.groupNames.map(name => (
+									<option value={name}>{name}</option>
+								))}
+							</select>
+						</label>
+					</div>
+
+					<div class="overflow-x-auto rounded-xl border border-zinc-200">
+						<table class="min-w-full border-collapse text-left text-sm">
+							<thead class="bg-zinc-100 text-zinc-700">
+								<tr>
+									<th scope="col" class="px-4 py-3 font-semibold">Название группы</th>
+									<th scope="col" class="whitespace-nowrap px-4 py-3 font-semibold">Дата</th>
+									<th scope="col" class="px-4 py-3 text-right font-semibold">Участников</th>
+									<th scope="col" class="px-4 py-3 text-right font-semibold">Новичков</th>
+									<th scope="col" class="px-4 py-3 font-semibold">User</th>
+									<th scope="col" class="whitespace-nowrap px-4 py-3 font-semibold">Внесено</th>
+									<th scope="col" class="min-w-64 px-4 py-3 font-semibold">
+										Дополнительная информация
+									</th>
+								</tr>
+							</thead>
+							<tbody data-stats-body class="divide-y divide-zinc-200 bg-white text-zinc-800">
+								{state.records.map(record => (
+									<tr
+										class="hover:bg-zinc-50"
+										data-sort-key={record.sortKey}
+										data-format={record.format}
+										data-group={record.groupName}
+									>
+										<td class="px-4 py-3 font-medium">{record.groupName}</td>
+										<td class="whitespace-nowrap px-4 py-3">{record.date}</td>
+										<td class="px-4 py-3 text-right tabular-nums">{record.participantCount}</td>
+										<td class="px-4 py-3 text-right tabular-nums">{record.newcomerCount}</td>
+										<td class="px-4 py-3">{record.user}</td>
+										<td class="whitespace-nowrap px-4 py-3">{record.timestamp}</td>
+										<td class="whitespace-pre-wrap px-4 py-3">{record.additionalInfo || "—"}</td>
+									</tr>
+								))}
+							</tbody>
+						</table>
+					</div>
+
+					<p data-stats-empty hidden class="rounded-lg bg-zinc-50 p-5 text-zinc-600">
+						Под выбранные фильтры записей нет.
+					</p>
+				</div>
+			)}
+		</section>
+	) : (
+		<AccessForm error={state.loginError} returnTo={dataset.basePath} title={dataset.heading} />
+	)
+}
+
+<script>
+	const root = document.querySelector<HTMLElement>("[data-stats-table]")
+	if (root) {
+		const body = root.querySelector<HTMLTableSectionElement>("[data-stats-body]")!
+		const sortSelect = root.querySelector<HTMLSelectElement>("[data-stats-sort]")!
+		const formatSelect = root.querySelector<HTMLSelectElement>("[data-stats-format]")!
+		const groupSelect = root.querySelector<HTMLSelectElement>("[data-stats-group]")!
+		const empty = root.querySelector<HTMLElement>("[data-stats-empty]")!
+		const shown = document.querySelector<HTMLElement>("[data-stats-shown]")
+		const rows = Array.from(body.querySelectorAll<HTMLTableRowElement>("tr"))
+
+		const apply = () => {
+			const format = formatSelect.value
+			const group = groupSelect.value
+			let visible = 0
+
+			for (const row of rows) {
+				const matches =
+					(format === "all" || row.dataset.format === format) &&
+					(group === "all" || row.dataset.group === group)
+				row.hidden = !matches
+				if (matches) visible += 1
+			}
+
+			const direction = sortSelect.value === "asc" ? 1 : -1
+			const sorted = [...rows].sort(
+				(a, b) => direction * (a.dataset.sortKey ?? "").localeCompare(b.dataset.sortKey ?? ""),
+			)
+			for (const row of sorted) body.append(row)
+
+			empty.hidden = visible > 0
+			if (shown) shown.textContent = String(visible)
+		}
+
+		for (const control of [sortSelect, formatSelect, groupSelect]) {
+			control.addEventListener("change", apply)
+		}
+		apply()
+	}
+</script>

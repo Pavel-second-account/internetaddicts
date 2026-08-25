@@ -1,0 +1,168 @@
+---
+import AccessForm from "@/components/group-statistics/AccessForm.astro"
+import StatisticsNav from "@/components/group-statistics/StatisticsNav.astro"
+import type { StatisticsDataset } from "@/lib/group-statistics/datasets"
+import type { FormPageState } from "@/lib/group-statistics/pageActions"
+import { MAX_ADDITIONAL_INFO_LENGTH } from "@/lib/group-statistics/records"
+
+interface Props {
+	dataset: StatisticsDataset
+	state: FormPageState
+}
+
+const { dataset, state } = Astro.props
+const { values } = state
+const inputClass =
+	"rounded-lg border border-zinc-300 px-3 py-2.5 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+const savedMessage = dataset.syncsWithGoogle
+	? "Запись сохранена на сайте и в Google-таблице."
+	: "Запись сохранена."
+---
+
+{
+	state.authenticated ? (
+		<section class="mx-auto flex w-full max-w-3xl flex-col gap-6">
+			<StatisticsNav current="new" basePath={dataset.basePath} />
+			<header>
+				<h1 class="text-3xl font-bold text-zinc-800">Новая запись</h1>
+				<p class="mt-2 text-zinc-600">Внесите статистику после завершения собрания.</p>
+			</header>
+
+			{state.saved === "both" && (
+				<p role="status" class="rounded-lg bg-green-50 p-4 text-green-800">
+					{savedMessage}
+				</p>
+			)}
+			{state.saved === "local" && (
+				<p role="status" class="rounded-lg bg-amber-50 p-4 text-amber-900">
+					Запись сохранена на сайте. Синхронизация с Google будет повторена автоматически —
+					повторно отправлять форму не нужно.
+				</p>
+			)}
+			{state.saveError && (
+				<p role="alert" class="rounded-lg bg-red-50 p-4 text-red-800">
+					{state.saveError}
+				</p>
+			)}
+
+			<form
+				method="post"
+				class="grid gap-5 rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm"
+			>
+				<input type="hidden" name="action" value="create" />
+				<label class="grid gap-2 font-medium text-zinc-800">
+					Конкретное собрание
+					{dataset.restrictToGroups ? (
+						<select name="groupName" required class={inputClass}>
+							<option value="">Выберите группу</option>
+							{state.meetings.map(meeting => (
+								<option value={meeting.name} selected={values.groupName === meeting.name}>
+									{meeting.name}
+								</option>
+							))}
+						</select>
+					) : (
+						<input
+							type="text"
+							name="groupName"
+							value={values.groupName}
+							required
+							maxlength="120"
+							list="group-statistics-known-groups"
+							placeholder="Название, день недели и время"
+							class={inputClass}
+						/>
+					)}
+					<span class="text-sm font-normal text-zinc-500">
+						{dataset.restrictToGroups
+							? "Название, день недели и время берутся из раздела «Группы»."
+							: "Укажите название группы, день недели и время — например «Группа АКИ — Вторник, 19:00». Пишите его одинаково каждый раз, чтобы фильтр по группе работал."}
+					</span>
+				</label>
+				{!dataset.restrictToGroups && (
+					<datalist id="group-statistics-known-groups">
+						{state.knownGroupNames.map(name => (
+							<option value={name} />
+						))}
+					</datalist>
+				)}
+
+				<div class="grid gap-5 sm:grid-cols-3">
+					<label class="grid gap-2 font-medium text-zinc-800">
+						Дата
+						<input type="date" name="date" value={values.date} required class={inputClass} />
+					</label>
+					<label class="grid gap-2 font-medium text-zinc-800">
+						Участников
+						<input
+							type="number"
+							name="participantCount"
+							value={values.participantCount}
+							min="0"
+							max="10000"
+							step="1"
+							required
+							inputmode="numeric"
+							class={inputClass}
+						/>
+					</label>
+					<label class="grid gap-2 font-medium text-zinc-800">
+						Новичков
+						<input
+							type="number"
+							name="newcomerCount"
+							value={values.newcomerCount}
+							min="0"
+							max="10000"
+							step="1"
+							required
+							inputmode="numeric"
+							class={inputClass}
+						/>
+					</label>
+				</div>
+
+				<label class="grid gap-2 font-medium text-zinc-800">
+					Кто вносит данные
+					<input
+						type="text"
+						name="user"
+						value={values.user}
+						required
+						maxlength="80"
+						autocomplete="name"
+						placeholder="Имя или username"
+						class={inputClass}
+					/>
+				</label>
+
+				<label class="grid gap-2 font-medium text-zinc-800">
+					Дополнительная информация
+					<textarea
+						name="additionalInfo"
+						maxlength={MAX_ADDITIONAL_INFO_LENGTH}
+						rows="4"
+						placeholder="При необходимости добавьте комментарий о собрании"
+						class={`resize-y ${inputClass}`}
+					>{values.additionalInfo}</textarea>
+					<span class="text-sm font-normal text-zinc-500">
+						Необязательное поле, до {MAX_ADDITIONAL_INFO_LENGTH} символов.
+					</span>
+				</label>
+
+				<button
+					type="submit"
+					class="mt-2 rounded-lg bg-blue-600 px-5 py-3 font-semibold !text-white hover:bg-blue-700"
+				>
+					Сохранить
+				</button>
+			</form>
+		</section>
+	) : (
+		<AccessForm
+			error={state.loginError}
+			returnTo={`${dataset.basePath}/new`}
+			title={dataset.heading}
+		/>
+	)
+}

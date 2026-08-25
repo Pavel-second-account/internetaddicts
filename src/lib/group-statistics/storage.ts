@@ -1,24 +1,37 @@
 import { randomUUID } from "node:crypto"
 import { mkdir, readFile, rename, writeFile } from "node:fs/promises"
 import { dirname, resolve } from "node:path"
+import type { StatisticsDataset } from "./datasets"
 import type { GroupStatisticRecord } from "./records"
 
-const DEFAULT_PRODUCTION_PATH = "/opt/internetaddicts/shared/group-statistics.json"
-const DEFAULT_DEVELOPMENT_PATH = "./data/group-statistics.json"
-
-let writeQueue: Promise<void> = Promise.resolve()
+// One serialised write queue per dataset so the endpoints never interleave
+// read-modify-write cycles on the same file.
+const writeQueues = new Map<string, Promise<void>>()
 
 export interface StoredGroupStatistic extends GroupStatisticRecord {
 	id?: string
 	googleSyncedAt?: string
 }
 
-function dataFilePath(): string {
-	const configured = process.env.AIZ_STATS_DATA_FILE?.trim()
+function dataFilePath(dataset: StatisticsDataset): string {
+	const configured = process.env[dataset.dataFileEnv]?.trim()
 	if (configured) return resolve(configured)
 	return process.env.NODE_ENV === "production"
-		? DEFAULT_PRODUCTION_PATH
-		: resolve(DEFAULT_DEVELOPMENT_PATH)
+		? dataset.productionDataFile
+		: resolve(dataset.developmentDataFile)
+}
+
+function enqueue<T>(dataset: StatisticsDataset, task: () => Promise<T>): Promise<T> {
+	const previous = writeQueues.get(dataset.id) ?? Promise.resolve()
+	const operation = previous.then(task)
+	writeQueues.set(
+		dataset.id,
+		operation.then(
+			() => undefined,
+			() => undefined,
+		),
+	)
+	return operation
 }
 
 function isRecord(value: unknown): value is StoredGroupStatistic {
@@ -34,7 +47,7 @@ function isRecord(value: unknown): value is StoredGroupStatistic {
 	)
 }
 
-async function readRecords(path = dataFilePath()): Promise<StoredGroupStatistic[]> {
+async function readRecords(path: string): Promise<StoredGroupStatistic[]> {
 	try {
 		const contents = await readFile(path, "utf8")
 		const parsed: unknown = JSON.parse(contents)
@@ -59,14 +72,19 @@ async function writeRecords(path: string, records: StoredGroupStatistic[]): Prom
 	await rename(temporaryPath, path)
 }
 
-export async function listStoredStatistics(): Promise<StoredGroupStatistic[]> {
-	await writeQueue
-	return readRecords()
+export async function listStoredStatistics(
+	dataset: StatisticsDataset,
+): Promise<StoredGroupStatistic[]> {
+	await (writeQueues.get(dataset.id) ?? Promise.resolve())
+	return readRecords(dataFilePath(dataset))
 }
 
-export async function listPendingGoogleStatistics(): Promise<StoredGroupStatistic[]> {
-	const operation = writeQueue.then(async () => {
-		const path = dataFilePath()
+export async function listPendingGoogleStatistics(
+	dataset: StatisticsDataset,
+): Promise<StoredGroupStatistic[]> {
+	if (!dataset.syncsWithGoogle) return []
+	return enqueue(dataset, async () => {
+		const path = dataFilePath(dataset)
 		const records = await readRecords(path)
 		let migrated = false
 		for (const record of records) {
@@ -78,40 +96,33 @@ export async function listPendingGoogleStatistics(): Promise<StoredGroupStatisti
 		if (migrated) await writeRecords(path, records)
 		return records.filter(record => !record.googleSyncedAt)
 	})
-
-	writeQueue = operation.then(
-		() => undefined,
-		() => undefined,
-	)
-	return operation
 }
 
 export async function appendStoredStatistic(
+	dataset: StatisticsDataset,
 	record: GroupStatisticRecord,
 ): Promise<StoredGroupStatistic> {
 	const storedRecord: StoredGroupStatistic = { ...record, id: randomUUID() }
-	const operation = writeQueue.then(async () => {
-		const path = dataFilePath()
+	await enqueue(dataset, async () => {
+		const path = dataFilePath(dataset)
 		const records = await readRecords(path)
 		records.push(storedRecord)
 		await writeRecords(path, records)
 	})
-
-	writeQueue = operation.catch(() => undefined)
-	await operation
 	return storedRecord
 }
 
-export async function markGoogleStatisticSynced(id: string, syncedAt = new Date()): Promise<void> {
-	const operation = writeQueue.then(async () => {
-		const path = dataFilePath()
+export async function markGoogleStatisticSynced(
+	dataset: StatisticsDataset,
+	id: string,
+	syncedAt = new Date(),
+): Promise<void> {
+	return enqueue(dataset, async () => {
+		const path = dataFilePath(dataset)
 		const records = await readRecords(path)
 		const record = records.find(candidate => candidate.id === id)
 		if (!record) throw new Error(`Локальная запись ${id} не найдена.`)
 		record.googleSyncedAt = syncedAt.toISOString()
 		await writeRecords(path, records)
 	})
-
-	writeQueue = operation.catch(() => undefined)
-	return operation
 }

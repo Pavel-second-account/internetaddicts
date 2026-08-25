@@ -1,12 +1,12 @@
 ---
 import FormPage from "@/components/group-statistics/FormPage.astro"
 import Layout from "@/layout/Layout.astro"
-import { MAIN_DATASET } from "@/lib/group-statistics/datasets"
+import { AKI_DATASET } from "@/lib/group-statistics/datasets"
 import { handleFormPage } from "@/lib/group-statistics/pageActions"
 
 export const prerender = false
 
-const dataset = MAIN_DATASET
+const dataset = AKI_DATASET
 const state = await handleFormPage(dataset, Astro)
 if (state.redirectTo) return Astro.redirect(state.redirectTo, 303)
 if (state.status) Astro.response.status = state.status

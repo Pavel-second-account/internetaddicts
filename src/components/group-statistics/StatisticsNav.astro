@@ -1,26 +1,27 @@
 ---
 interface Props {
 	current: "new" | "records"
+	basePath: string
 }
 
-const { current } = Astro.props
+const { current, basePath } = Astro.props
 const linkClass = "rounded-lg px-3 py-2 font-medium"
 ---
 
 <div class="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-200 pb-5">
 	<nav aria-label="Статистика групп" class="flex flex-wrap gap-2">
 		<a
-			href="/group-statistics/new"
+			href={`${basePath}/new`}
 			aria-current={current === "new" ? "page" : undefined}
 			class:list={[linkClass, current === "new" && "bg-blue-50"]}>Новая запись</a
 		>
 		<a
-			href="/group-statistics"
+			href={basePath}
 			aria-current={current === "records" ? "page" : undefined}
 			class:list={[linkClass, current === "records" && "bg-blue-50"]}>Внесённые записи</a
 		>
 	</nav>
-	<form method="post" action="/group-statistics/logout">
+	<form method="post" action={`${basePath}/logout`}>
 		<button type="submit" class="rounded-lg px-3 py-2 text-sm">Выйти</button>
 	</form>
 </div>

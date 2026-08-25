@@ -1,6 +1,6 @@
 import { createHash, createHmac, timingSafeEqual } from "node:crypto"
+import type { StatisticsDataset } from "./datasets"
 
-const COOKIE_NAME = "aiz_group_statistics_session"
 const SESSION_LIFETIME_SECONDS = 8 * 60 * 60
 
 function getPassword(): string {
@@ -15,8 +15,12 @@ function digest(value: string): Buffer {
 	return createHash("sha256").update(value).digest()
 }
 
-function sign(expiresAt: string): string {
-	return createHmac("sha256", getSessionSecret()).update(`v1.${expiresAt}`).digest("base64url")
+// The dataset id is part of the signed payload so a session issued for one
+// endpoint cannot be replayed against another.
+function sign(dataset: StatisticsDataset, expiresAt: string): string {
+	return createHmac("sha256", getSessionSecret())
+		.update(`v1.${dataset.id}.${expiresAt}`)
+		.digest("base64url")
 }
 
 export function isPasswordConfigured(): boolean {
@@ -29,25 +33,35 @@ export function passwordMatches(candidate: string): boolean {
 	return timingSafeEqual(digest(candidate), digest(configured))
 }
 
-export function hasValidSession(cookieValue: string | undefined): boolean {
+export function hasValidSession(
+	dataset: StatisticsDataset,
+	cookieValue: string | undefined,
+): boolean {
 	if (!cookieValue || !isPasswordConfigured()) return false
 
 	const [version, expiresAt, signature] = cookieValue.split(".")
 	if (version !== "v1" || !expiresAt || !signature) return false
 	if (!/^\d+$/.test(expiresAt) || Number(expiresAt) <= Math.floor(Date.now() / 1000)) return false
 
-	const expected = sign(expiresAt)
+	const expected = sign(dataset, expiresAt)
 	return timingSafeEqual(digest(signature), digest(expected))
 }
 
-export function createSessionCookie(): string {
+export function createSessionCookie(dataset: StatisticsDataset): string {
 	const expiresAt = String(Math.floor(Date.now() / 1000) + SESSION_LIFETIME_SECONDS)
-	return `v1.${expiresAt}.${sign(expiresAt)}`
+	return `v1.${expiresAt}.${sign(dataset, expiresAt)}`
 }
 
-export const sessionCookie = {
-	name: COOKIE_NAME,
-	maxAge: SESSION_LIFETIME_SECONDS,
+export function sessionCookie(dataset: StatisticsDataset): {
+	name: string
+	path: string
+	maxAge: number
+} {
+	return {
+		name: dataset.cookieName,
+		path: dataset.basePath,
+		maxAge: SESSION_LIFETIME_SECONDS,
+	}
 }
 
 export function isSameOrigin(request: Request, _url: URL): boolean {

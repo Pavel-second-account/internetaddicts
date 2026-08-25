@@ -1,12 +1,12 @@
 ---
 import RecordsPage from "@/components/group-statistics/RecordsPage.astro"
 import Layout from "@/layout/Layout.astro"
-import { MAIN_DATASET } from "@/lib/group-statistics/datasets"
+import { AKI_DATASET } from "@/lib/group-statistics/datasets"
 import { loadRecordsPage } from "@/lib/group-statistics/pageActions"
 
 export const prerender = false
 
-const dataset = MAIN_DATASET
+const dataset = AKI_DATASET
 const state = await loadRecordsPage(dataset, Astro)
 if (state.redirectTo) return Astro.redirect(state.redirectTo, 303)
 if (state.status) Astro.response.status = state.status
