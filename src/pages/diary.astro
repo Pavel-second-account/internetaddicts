@@ -78,6 +78,15 @@ if (entry === undefined) {
 	return Astro.redirect("/404")
 }
 const { Content } = await entry.render()
+
+const shareUrl = new URL(Astro.url.pathname, Astro.site).toString()
+const shareBody = entry.body
+	.split("\n")
+	.map((line) => line.trimEnd())
+	.join("\n")
+	.trim()
+const shareText = `Ежедневник АИЗ: ${currentDiary.data.title} | ${formattedDate}\n\n${shareBody}`
+const telegramShareHref = `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`
 ---
 
 <Layout data-pagefind-ignore title="Ежедневник" desc="Ежедневник АИЗ">
@@ -86,14 +95,26 @@ const { Content } = await entry.render()
 			class="mx-auto flex-wrap max-w-[780px] mb-10 items-center flex justify-between gap-3"
 		>
 			<a href={minusLink} class="text-3xl font-medium rounded-lg py-2 px-3">&#8592;</a>
-			<a
-				target="_blank"
-				href={`https://t.me/share/url?url=${new URL(Astro.url.pathname, Astro.site)}&text=Ежедневник АИЗ: ${currentDiary.data.title} | ${formattedDate}`}
-				class="text-sky-700 flex items-center gap-1 ring-1 ring-sky-400/50 bg-blue-100 rounded-lg px-4 py-1.5 hover:text-sky-700"
-			>
-				<Icon name="mdi:telegram" />
-				<span>Поделиться в группе</span>
-			</a>
+			<div class="flex flex-wrap items-center justify-center gap-2">
+				<a
+					target="_blank"
+					rel="noopener"
+					href={telegramShareHref}
+					class="text-sky-700 flex items-center gap-1 ring-1 ring-sky-400/50 bg-blue-100 rounded-lg px-4 py-1.5 hover:text-sky-700"
+				>
+					<Icon name="mdi:telegram" />
+					<span>Поделиться в группе</span>
+				</a>
+				<button
+					type="button"
+					id="diary-copy"
+					data-text={`${shareText}\n\n${shareUrl}`}
+					class="text-sky-700 flex items-center gap-1 ring-1 ring-sky-400/50 bg-blue-100 rounded-lg px-4 py-1.5"
+				>
+					<Icon name="mdi:content-copy" />
+					<span>Скопировать текст</span>
+				</button>
+			</div>
 			<a href={plusLink} class="text-3xl font-medium rounded-lg py-2 px-3">&#8594;</a>
 		</aside>
 		<main class="prose-aiz mx-auto max-w-3xl">
@@ -104,3 +125,19 @@ const { Content } = await entry.render()
 		</main>
 	</main>
 </Layout>
+
+<script>
+	document.getElementById("diary-copy")?.addEventListener("click", async (event) => {
+		const button = event.currentTarget as HTMLButtonElement
+		const label = button.querySelector("span")
+		try {
+			await navigator.clipboard.writeText(button.dataset.text ?? "")
+			if (label) label.textContent = "Скопировано"
+		} catch {
+			if (label) label.textContent = "Не удалось скопировать"
+		}
+		setTimeout(() => {
+			if (label) label.textContent = "Скопировать текст"
+		}, 2000)
+	})
+</script>
