@@ -96,15 +96,15 @@ const telegramShareHref = `https://t.me/share/url?url=${encodeURIComponent(share
 		>
 			<a href={minusLink} class="text-3xl font-medium rounded-lg py-2 px-3">&#8592;</a>
 			<div class="flex flex-wrap items-center justify-center gap-2">
-				<a
-					target="_blank"
-					rel="noopener"
-					href={telegramShareHref}
-					class="text-sky-700 flex items-center gap-1 ring-1 ring-sky-400/50 bg-blue-100 rounded-lg px-4 py-1.5 hover:text-sky-700"
+				<button
+					type="button"
+					id="diary-share"
+					data-href={telegramShareHref}
+					class="text-sky-700 flex items-center gap-1 ring-1 ring-sky-400/50 bg-blue-100 rounded-lg px-4 py-1.5"
 				>
 					<Icon name="mdi:telegram" />
 					<span>Поделиться в группе</span>
-				</a>
+				</button>
 				<button
 					type="button"
 					id="diary-copy"
@@ -127,6 +127,12 @@ const telegramShareHref = `https://t.me/share/url?url=${encodeURIComponent(share
 </Layout>
 
 <script>
+	// Кнопка вместо <a href="t.me/share…">: блокировщики рекламы скрывают такие ссылки как соцкнопки.
+	document.getElementById("diary-share")?.addEventListener("click", (event) => {
+		const href = (event.currentTarget as HTMLButtonElement).dataset.href
+		if (href) window.open(href, "_blank", "noopener")
+	})
+
 	document.getElementById("diary-copy")?.addEventListener("click", async (event) => {
 		const button = event.currentTarget as HTMLButtonElement
 		const label = button.querySelector("span")
