@@ -52,6 +52,7 @@ export const posts = collection({
 				{ label: "Станислав", value: "Станислав" },
 				{ label: "Даниил", value: "Даниил" },
 				{ label: "Салима", value: "Салима" },
+				{ label: "Павел", value: "Павел" },
 			],
 			defaultValue: "АИЗ",
 		}),

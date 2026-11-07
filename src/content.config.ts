@@ -22,6 +22,7 @@ const postAuthorValues = [
 	"Станислав",
 	"Даниил",
 	"Салима",
+	"Павел",
 ] as const
 
 const postsCollection = defineCollection({

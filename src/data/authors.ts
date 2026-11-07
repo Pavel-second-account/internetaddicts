@@ -10,6 +10,7 @@ export const AUTHOR_IDS = [
 	"Станислав",
 	"Даниил",
 	"Салима",
+	"Павел",
 ] as const
 
 export type AuthorId = (typeof AUTHOR_IDS)[number]
