@@ -46,6 +46,7 @@ const savedMessage = dataset.syncsWithGoogle
 			)}
 
 			<form
+				data-statistics-form
 				method="post"
 				class="grid gap-5 rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm"
 			>
@@ -91,6 +92,7 @@ const savedMessage = dataset.syncsWithGoogle
 					<label class="grid gap-2 font-medium text-zinc-800">
 						Дата
 						<input type="date" name="date" value={values.date} required class={inputClass} />
+						<span data-date-hint class="text-sm font-normal text-zinc-500" aria-live="polite"></span>
 					</label>
 					<label class="grid gap-2 font-medium text-zinc-800">
 						Участников
@@ -166,3 +168,59 @@ const savedMessage = dataset.syncsWithGoogle
 		/>
 	)
 }
+
+<script>
+	// Поле даты показывает порядок день/месяц по языку браузера: при английском это «мм/дд/гггг»,
+	// и 08.11 легко превращается в 11 августа. Показываем дату словами и переспрашиваем,
+	// если она далеко в прошлом, в будущем или не совпадает с днём недели собрания.
+	const WEEKDAYS = ["воскресенье", "понедельник", "вторник", "среда", "четверг", "пятница", "суббота"]
+	const ON_DAY: Record<string, string> = {
+		воскресенье: "в воскресенье", понедельник: "в понедельник", вторник: "во вторник", среда: "в среду",
+		четверг: "в четверг", пятница: "в пятницу", суббота: "в субботу",
+	}
+	const MAX_AGE_DAYS = 21
+
+	for (const form of document.querySelectorAll<HTMLFormElement>("form[data-statistics-form]")) {
+		const dateInput = form.querySelector<HTMLInputElement>('input[name="date"]')
+		const hint = form.querySelector<HTMLElement>("[data-date-hint]")
+		const group = form.querySelector<HTMLInputElement | HTMLSelectElement>('[name="groupName"]')
+		if (!dateInput || !hint) continue
+
+		const chosen = () => {
+			const [y, m, d] = dateInput.value.split("-").map(Number)
+			return y && m && d ? new Date(y, m - 1, d) : null
+		}
+		const words = (date: Date) =>
+			date.toLocaleDateString("ru-RU", { weekday: "long", day: "numeric", month: "long", year: "numeric" })
+		const update = () => {
+			const date = chosen()
+			hint.textContent = date ? words(date) : ""
+		}
+		dateInput.addEventListener("input", update)
+		dateInput.addEventListener("change", update)
+		update()
+
+		form.addEventListener("submit", event => {
+			const date = chosen()
+			if (!date) return
+			const today = new Date()
+			today.setHours(0, 0, 0, 0)
+			const ageDays = Math.round((today.getTime() - date.getTime()) / 86_400_000)
+			const problems: string[] = []
+			if (ageDays < 0) problems.push("дата в будущем")
+			else if (ageDays > MAX_AGE_DAYS) problems.push(`дата больше ${MAX_AGE_DAYS} дней назад`)
+			const groupDay = WEEKDAYS.find(day => (group?.value ?? "").toLowerCase().includes(day))
+			if (groupDay && groupDay !== WEEKDAYS[date.getDay()]) {
+				problems.push(`по расписанию собрание ${ON_DAY[groupDay]}, а выбран день: ${WEEKDAYS[date.getDay()]}`)
+			}
+			if (problems.length === 0) return
+			const ok = window.confirm(
+				`Проверьте дату: ${words(date)}.\n${problems.join("; ")}.\n\nСохранить с этой датой?`,
+			)
+			if (!ok) {
+				event.preventDefault()
+				dateInput.focus()
+			}
+		})
+	}
+</script>
